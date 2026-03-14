@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalónPro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lora:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #faf8f5; font-family: 'Lora', Georgia, serif; }
+    input, select, button { font-family: 'Lora', Georgia, serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f0ece4; }
+    ::-webkit-scrollbar-thumb { background: #c8b89a; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+
+const STORAGE_KEY = "salonpro_v3";
+const SESSION_KEY = "salonpro_session";
+
+const defaultData = () => ({
+  eventos: [],
+  stock: { cocina: [], mozos: [], limpieza: [], freezer: [] },
+  faltantes: [],
+});
+
+function loadData() {
+  try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s); } catch {}
+  return defaultData();
+}
+function saveData(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} }
+function loadSession() { try { return localStorage.getItem(SESSION_KEY); } catch {} return null; }
+function saveSession(u) { try { localStorage.setItem(SESSION_KEY, u); } catch {} }
+function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch {} }
+
+const USERS = [
+  { id: "cordoba", name: "Córdoba", avatar: "👨‍💼", color: "#1a4d7c", bg: "#e8f0fa" },
+  { id: "jere",    name: "Jere",    avatar: "🤵",   color: "#276749", bg: "#e8f5ee" },
+  { id: "erica",   name: "Érica",   avatar: "👑",   color: "#b8860b", bg: "#fdf3dc" },
+];
+
+const T = {
+  bg: "#faf8f5", bgDeep: "#f0ece4", card: "#ffffff", border: "#e4ddd3",
+  ink: "#1c1a17", inkMid: "#6b6456", inkLight: "#a39b8e",
+  gold: "#b8860b", goldLight: "#fdf3dc", goldBright: "#d4a017",
+  red: "#c0392b", green: "#276749", blue: "#1a4d7c",
+};
+
+const TIPO_EVENTO = [
+  { v: "boda",        l: "💍 Boda",        color: "#c0392b" },
+  { v: "cumple",      l: "🎂 Cumpleaños",  color: "#d4a017" },
+  { v: "quince",      l: "👑 Quinceaños",  color: "#8e44ad" },
+  { v: "corporativo", l: "💼 Corporativo", color: "#1a4d7c" },
+  { v: "bautismo",    l: "🕊️ Bautismo",   color: "#2980b9" },
+  { v: "egresados",   l: "🎓 Egresados",   color: "#16a085" },
+  { v: "aniversario", l: "🥂 Aniversario", color: "#b8860b" },
+  { v: "otro",        l: "🎊 Otro",        color: "#7f8c8d" },
+];
+
+const MENU_SECCIONES = [
+  { id: "recepcion",  label: "🥂 Recepción",        color: "#b8860b" },
+  { id: "primer",     label: "🍽️ Primer plato",     color: "#c0392b" },
+  { id: "segundo",    label: "🍖 Segundo plato",    color: "#8e44ad" },
+  { id: "postre",     label: "🍮 Postre",           color: "#d4a017" },
+  { id: "especiales", label: "🌿 Menús especiales", color: "#276749" },
+  { id: "bebidas",    label: "🍷 Bebidas",          color: "#1a4d7c" },
+];
+
+const STOCK_CATS = [
+  { id: "cocina",   label: "🍳 Cocina",   color: "#c0392b" },
+  { id: "mozos",    label: "🤵 Mozos",    color: "#1a4d7c" },
+  { id: "limpieza", label: "🧹 Limpieza", color: "#276749" },
+  { id: "freezer",  label: "❄️ Freezer",  color: "#2980b9" },
+];
+
+const URGENCIAS = [
+  { v: "alta",  l: "🔴 Alta",  color: "#c0392b" },
+  { v: "media", l: "🟡 Media", color: "#d4a017" },
+  { v: "baja",  l: "🟢 Baja",  color: "#276749" },
+];
+
+const { useState, useEffect } = React;
+
+function Chip({ label, selected, color = T.gold, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      background: selected ? color : T.bgDeep,
+      color: selected ? "#fff" : T.inkMid,
+      border: `2px solid ${selected ? color : T.border}`,
+      borderRadius: 50, padding: "8px 18px",
+      fontWeight: selected ? 700 : 500, fontSize: 13,
+      cursor: "pointer", transition: "all .18s",
+      boxShadow: selected ? `0 2px 10px ${color}44` : "none",
+      whiteSpace: "nowrap",
+    }}>{label}</button>
+  );
+}
+
+function Btn({ children, onClick, variant = "primary", small, style = {} }) {
+  const v = {
+    primary: { background: T.gold, color: "#fff", border: `2px solid ${T.gold}`, boxShadow: `0 2px 10px ${T.gold}44` },
+    outline: { background: "transparent", color: T.gold, border: `2px solid ${T.gold}` },
+    ghost:   { background: "transparent", color: T.inkMid, border: `2px solid ${T.border}` },
+    danger:  { background: T.red, color: "#fff", border: `2px solid ${T.red}` },
+    success: { background: T.green, color: "#fff", border: `2px solid ${T.green}` },
+  }[variant];
+  return (
+    <button onClick={onClick} style={{
+      ...v, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+      fontWeight: 700, cursor: "pointer", borderRadius: 10,
+      padding: small ? "7px 15px" : "11px 22px",
+      fontSize: small ? 13 : 14, transition: "all .18s", ...style,
+    }}
+      onMouseEnter={e => e.currentTarget.style.opacity = ".82"}
+      onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+    >{children}</button>
+  );
+}
+
+function Field({ label, children, style = {} }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, ...style }}>
+      {label && <label style={{ fontSize: 11, fontWeight: 700, color: T.inkLight, textTransform: "uppercase", letterSpacing: 1.4 }}>{label}</label>}
+      {children}
+    </div>
+  );
+}
+
+function Inp({ value, onChange, placeholder, type = "text", style = {} }) {
+  return (
+    <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+      style={{
+        background: T.bgDeep, border: `1.5px solid ${T.border}`, borderRadius: 10,
+        padding: "10px 14px", color: T.ink, fontSize: 14, outline: "none",
+        width: "100%", ...style,
+      }} />
+  );
+}
+
+function Sel({ value, onChange, options, style = {} }) {
+  return (
+    <select value={value} onChange={e => onChange(e.target.value)}
+      style={{
+        background: T.bgDeep, border: `1.5px solid ${T.border}`, borderRadius: 10,
+        padding: "10px 14px", color: T.ink, fontSize: 14, outline: "none",
+        width: "100%", ...style,
+      }}>
+      {options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+    </select>
+  );
+}
+
+function Tag({ children, color = T.gold }) {
+  return (
+    <span style={{
+      background: color + "20", color, border: `1px solid ${color}44`,
+      borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 700,
+      letterSpacing: .8, textTransform: "uppercase", whiteSpace: "nowrap",
+    }}>{children}</span>
+  );
+}
+
+function Card({ children, style = {}, accent }) {
+  return (
+    <div style={{
+      background: T.card, border: `1px solid ${T.border}`,
+      borderLeft: accent ? `4px solid ${accent}` : undefined,
+      borderRadius: 14, padding: "18px 20px",
+      boxShadow: "0 2px 8px #0000000a", ...style,
+    }}>{children}</div>
+  );
+}
+
+function Divider({ label }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0 12px" }}>
+      <div style={{ flex: 1, height: 1, background: T.border }} />
+      <span style={{ color: T.inkLight, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5 }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: T.border }} />
+    </div>
+  );
+}
+
+function Login({ onLogin }) {
+  const [hover, setHover] = useState(null);
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #1c1a17 0%, #2d2820 50%, #1c1a17 100%)",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      padding: 24,
+    }}>
+      <div style={{ textAlign: "center", marginBottom: 52 }}>
+        <div style={{ fontSize: 50, marginBottom: 8 }}>✦</div>
+        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 42, fontWeight: 700, color: "#d4a017", letterSpacing: 2 }}>SalónPro</div>
+        <div style={{ color: "#a39b8e", fontSize: 14, marginTop: 6, letterSpacing: 1 }}>Sistema de gestión de eventos</div>
+      </div>
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
+        {USERS.map(u => (
+          <div key={u.id} onClick={() => onLogin(u)}
+            onMouseEnter={() => setHover(u.id)} onMouseLeave={() => setHover(null)}
+            style={{
+              background: hover === u.id ? "#2d2820" : "#252118",
+              border: `2px solid ${hover === u.id ? u.color : "#3a3428"}`,
+              borderRadius: 22, padding: "36px 32px", cursor: "pointer", textAlign: "center", minWidth: 160,
+              transition: "all .22s",
+              transform: hover === u.id ? "translateY(-6px)" : "translateY(0)",
+              boxShadow: hover === u.id ? `0 10px 32px ${u.color}55` : "0 2px 14px #00000055",
+            }}>
+            <div style={{ fontSize: 48, marginBottom: 14 }}>{u.avatar}</div>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 700, color: "#f0ece4", marginBottom: 10 }}>{u.name}</div>
+            <div style={{ background: u.color + "33", color: u.color, borderRadius: 20, padding: "5px 16px", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>Ingresar</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ color: "#5a5448", fontSize: 12, marginTop: 44, letterSpacing: .5 }}>Tocá tu nombre para ingresar</div>
+    </div>
+  );
+}
+
+function Dashboard({ data, user }) {
+  const hoy = new Date().toISOString().split("T")[0];
+  const proximos = data.eventos.filter(e => e.fecha >= hoy).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const stockBajo = STOCK_CATS.flatMap(c =>
+    (data.stock[c.id] || []).filter(s => s.minimo && Number(s.cantidad) <= Number(s.minimo))
+      .map(s => ({ ...s, catLabel: c.label, catColor: c.color }))
+  );
+  const faltPend = data.faltantes.filter(f => !f.resuelto);
+  const faltUrg  = faltPend.filter(f => f.urgencia === "alta");
+
+  return (
+    <div>
+      <div style={{ background: `linear-gradient(135deg, ${user.color}18, ${user.color}06)`, border: `1px solid ${user.color}30`, borderRadius: 16, padding: "20px 24px", marginBottom: 24, display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ fontSize: 42 }}>{user.avatar}</div>
+        <div>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 700, color: T.ink }}>Hola, {user.name} 👋</div>
+          <div style={{ color: T.inkMid, fontSize: 13, marginTop: 2 }}>{new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}</div>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 24 }}>
+        {[
+          { icon: "🎉", n: proximos.length, label: "Próximos eventos", sub: `${data.eventos.length} total`, color: T.gold },
+          { icon: "📦", n: stockBajo.length, label: "Stock bajo mínimo", sub: stockBajo.length === 0 ? "Todo OK ✓" : "Requiere atención", color: stockBajo.length > 0 ? T.red : T.green },
+          { icon: "🛒", n: faltPend.length, label: "Faltantes", sub: faltUrg.length > 0 ? `${faltUrg.length} urgente${faltUrg.length > 1?"s":""}` : "Sin urgentes", color: faltUrg.length > 0 ? T.red : T.inkMid },
+        ].map(s => (
+          <div key={s.label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "18px 16px", boxShadow: "0 2px 8px #0000000a" }}>
+            <div style={{ fontSize: 24, marginBottom: 4 }}>{s.icon}</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 34, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.n}</div>
+            <div style={{ color: T.inkMid, fontSize: 13, fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+            <div style={{ color: T.inkLight, fontSize: 11, marginTop: 2 }}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {proximos.length > 0 && (<>
+        <Divider label="Próximos eventos" />
+        {proximos.slice(0,3).map(e => {
+          const tipo = TIPO_EVENTO.find(t => t.v === e.tipo);
+          const dias = Math.ceil((new Date(e.fecha+"T12:00:00") - new Date()) / 86400000);
+          return (
+            <Card key={e.id} accent={tipo?.color || T.gold} style={{ marginBottom: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: T.ink, marginBottom: 4 }}>{e.cliente}</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <Tag color={tipo?.color || T.gold}>{tipo?.l}</Tag>
+                    {e.invitados && <Tag color={T.blue}>👥 {e.invitados}</Tag>}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 700, color: T.gold }}>{new Date(e.fecha+"T12:00:00").toLocaleDateString("es-AR",{day:"2-digit",month:"short"})}</div>
+                  <div style={{ color: dias<=3?T.red:T.inkLight, fontSize: 12, fontWeight: dias<=3?700:400 }}>{dias===0?"¡Hoy!":dias===1?"Mañana":`en ${dias} días`}</div>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </>)}
+
+      {stockBajo.length > 0 && (<>
+        <Divider label="⚠️ Alertas de stock" />
+        {stockBajo.map((s,i) => (
+          <Card key={i} accent={T.red} style={{ marginBottom: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span style={{ fontWeight: 700, color: T.ink }}>{s.nombre}</span>
+                <Tag color={s.catColor}>{s.catLabel}</Tag>
+              </div>
+              <span style={{ color: T.red, fontWeight: 800 }}>{s.cantidad} / {s.minimo} {s.unidad}</span>
+            </div>
+          </Card>
+        ))}
+      </>)}
+
+      {faltUrg.length > 0 && (<>
+        <Divider label="🔴 Faltantes urgentes" />
+        {faltUrg.map(f => (
+          <Card key={f.id} accent={T.red} style={{ marginBottom: 8 }}>
+            <span style={{ fontWeight: 700, color: T.ink }}>{f.nombre}</span>
+            {f.notas && <span style={{ color: T.inkLight, fontSize: 13 }}> · {f.notas}</span>}
+          </Card>
+        ))}
+      </>)}
+
+      {data.eventos.length === 0 && stockBajo.length === 0 && faltPend.length === 0 && (
+        <div style={{ textAlign: "center", paddingTop: 50, color: T.inkLight }}>
+          <div style={{ fontSize: 52, marginBottom: 12 }}>🎊</div>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20 }}>¡Todo en orden!</div>
+          <div style={{ fontSize: 14, marginTop: 4 }}>Empezá cargando eventos o stock.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Eventos({ data, setData, user }) {
+  const emptyForm = { cliente: "", telefono: "", fecha: "", tipo: "", invitados: "", notas: "" };
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [expanded, setExpanded] = useState(null);
+  const [seccionAbierta, setSeccionAbierta] = useState({});
+  const [menuInputs, setMenuInputs] = useState({});
+  const hoy = new Date().toISOString().split("T")[0];
+
+  const guardar = () => {
+    if (!form.fecha || !form.cliente || !form.tipo) return;
+    setData(d => ({ ...d, eventos: [...d.eventos, { ...form, id: Date.now(), creadoPor: user.name, menu: Object.fromEntries(MENU_SECCIONES.map(s => [s.id, []])) }] }));
+    setForm(emptyForm); setShowForm(false);
+  };
+  const eliminar = (id) => setData(d => ({ ...d, eventos: d.eventos.filter(e => e.id !== id) }));
+  const addMenuItem = (eId, sId) => {
+    const key = `${eId}_${sId}`;
+    const inp = menuInputs[key] || { texto: "", cantidad: "" };
+    if (!inp.texto.trim()) return;
+    setData(d => ({ ...d, eventos: d.eventos.map(e => e.id === eId ? { ...e, menu: { ...e.menu, [sId]: [...(e.menu?.[sId]||[]), { ...inp, id: Date.now() }] } } : e) }));
+    setMenuInputs(m => ({ ...m, [key]: { texto: "", cantidad: "" } }));
+  };
+  const delMenuItem = (eId, sId, iId) => {
+    setData(d => ({ ...d, eventos: d.eventos.map(e => e.id === eId ? { ...e, menu: { ...e.menu, [sId]: (e.menu?.[sId]||[]).filter(i => i.id !== iId) } } : e) }));
+  };
+
+  const proximos = data.eventos.filter(e => e.fecha >= hoy).sort((a,b) => a.fecha.localeCompare(b.fecha));
+  const pasados  = data.eventos.filter(e => e.fecha < hoy).sort((a,b) => b.fecha.localeCompare(a.fecha));
+
+  const EventCard = ({ ev, past }) => {
+    const tipo = TIPO_EVENTO.find(t => t.v === ev.tipo);
+    const isOpen = expanded === ev.id;
+    const totalItems = MENU_SECCIONES.reduce((a,s) => a + (ev.menu?.[s.id]?.length||0), 0);
+    return (
+      <Card accent={past ? T.border : (tipo?.color||T.gold)} style={{ marginBottom: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6, flexWrap: "wrap" }}>
+              <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 18, color: T.ink }}>{ev.cliente}</span>
+              {tipo && <Tag color={past?T.inkLight:tipo.color}>{tipo.l}</Tag>}
+              {past && <Tag color={T.inkLight}>Realizado</Tag>}
+            </div>
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", color: T.inkMid, fontSize: 13 }}>
+              <span>📅 {new Date(ev.fecha+"T12:00:00").toLocaleDateString("es-AR",{day:"2-digit",month:"long",year:"numeric"})}</span>
+              {ev.invitados && <span>👥 {ev.invitados} invitados</span>}
+              {ev.telefono && <span>📞 {ev.telefono}</span>}
+            </div>
+            {ev.creadoPor && <div style={{ color: T.inkLight, fontSize: 11, marginTop: 4 }}>Creado por {ev.creadoPor}</div>}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Btn small variant="outline" onClick={() => setExpanded(isOpen ? null : ev.id)}>
+              {isOpen ? "▲ Cerrar" : `🍽️ Menú${totalItems>0?` (${totalItems})`:""}`}
+            </Btn>
+            <Btn small variant="ghost" onClick={() => eliminar(ev.id)}>✕</Btn>
+          </div>
+        </div>
+        {isOpen && (
+          <div style={{ marginTop: 18, borderTop: `1px solid ${T.border}`, paddingTop: 18 }}>
+            {MENU_SECCIONES.map(sec => {
+              const items = ev.menu?.[sec.id] || [];
+              const open  = seccionAbierta[`${ev.id}_${sec.id}`];
+              const key   = `${ev.id}_${sec.id}`;
+              const inp   = menuInputs[key] || { texto: "", cantidad: "" };
+              return (
+                <div key={sec.id} style={{ marginBottom: 8, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+                  <button onClick={() => setSeccionAbierta(s => ({ ...s, [`${ev.id}_${sec.id}`]: !open }))}
+                    style={{ width: "100%", background: open ? sec.color+"15" : T.bgDeep, border: "none", padding: "13px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", transition: "background .18s" }}>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      <span style={{ fontWeight: 700, fontSize: 14, color: open?sec.color:T.ink }}>{sec.label}</span>
+                      {items.length > 0 && <span style={{ background: sec.color+"25", color: sec.color, borderRadius: 20, padding: "1px 9px", fontSize: 11, fontWeight: 700 }}>{items.length}</span>}
+                    </div>
+                    <span style={{ color: T.inkLight, fontSize: 12 }}>{open?"▲":"▼"}</span>
+                  </button>
+                  {open && (
+                    <div style={{ padding: "14px 16px", background: T.card }}>
+                      {items.length > 0 ? (
+                        <div style={{ display: "grid", gap: 6, marginBottom: 12 }}>
+                          {items.map(it => (
+                            <div key={it.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: T.bgDeep, borderRadius: 8, padding: "8px 12px" }}>
+                              <span style={{ color: T.ink, fontSize: 14 }}>{it.texto}</span>
+                              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                                {it.cantidad && <span style={{ color: sec.color, fontWeight: 700, fontSize: 13 }}>{it.cantidad}</span>}
+                                <button onClick={() => delMenuItem(ev.id, sec.id, it.id)} style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 0 }}>✕</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : <div style={{ color: T.inkLight, fontSize: 13, marginBottom: 12 }}>Sin ítems en esta sección</div>}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 90px auto", gap: 8 }}>
+                        <Inp value={inp.texto} onChange={v => setMenuInputs(m => ({ ...m, [key]: { ...inp, texto: v } }))} placeholder="Descripción del plato..." />
+                        <Inp value={inp.cantidad} onChange={v => setMenuInputs(m => ({ ...m, [key]: { ...inp, cantidad: v } }))} placeholder="Cant." />
+                        <Btn small onClick={() => addMenuItem(ev.id, sec.id)}>+ Add</Btn>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    );
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 700, color: T.ink }}>🎉 Eventos</div>
+        <Btn onClick={() => { setShowForm(!showForm); setForm(emptyForm); }}>{showForm?"Cancelar":"+ Nuevo evento"}</Btn>
+      </div>
+      {showForm && (
+        <Card style={{ borderColor: T.gold+"88", marginBottom: 24 }}>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, color: T.gold, marginBottom: 16, fontSize: 17 }}>Nuevo evento</div>
+          <Field label="Tipo de evento *" style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {TIPO_EVENTO.map(t => <Chip key={t.v} label={t.l} selected={form.tipo===t.v} color={t.color} onClick={() => setForm(f => ({ ...f, tipo: f.tipo===t.v?"":t.v }))} />)}
+            </div>
+          </Field>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <Field label="Cliente *"><Inp value={form.cliente} onChange={v => setForm(f => ({ ...f, cliente: v }))} placeholder="Nombre del cliente" /></Field>
+            <Field label="Teléfono"><Inp value={form.telefono} onChange={v => setForm(f => ({ ...f, telefono: v }))} placeholder="Teléfono" /></Field>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+            <Field label="Fecha *"><Inp type="date" value={form.fecha} onChange={v => setForm(f => ({ ...f, fecha: v }))} /></Field>
+            <Field label="Invitados"><Inp type="number" value={form.invitados} onChange={v => setForm(f => ({ ...f, invitados: v }))} placeholder="Ej: 200" /></Field>
+          </div>
+          <Field label="Notas" style={{ marginBottom: 16 }}><Inp value={form.notas} onChange={v => setForm(f => ({ ...f, notas: v }))} placeholder="Observaciones..." /></Field>
+          <Btn onClick={guardar} style={{ opacity: (!form.cliente||!form.fecha||!form.tipo)?.5:1 }}>Guardar evento</Btn>
+        </Card>
+      )}
+      {proximos.length > 0 && <><Divider label="Próximos" />{proximos.map(e => <EventCard key={e.id} ev={e} />)}</>}
+      {pasados.length  > 0 && <><Divider label="Realizados" />{pasados.map(e => <EventCard key={e.id} ev={e} past />)}</>}
+      {data.eventos.length === 0 && (
+        <div style={{ textAlign: "center", paddingTop: 60, color: T.inkLight }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20 }}>No hay eventos aún.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stock({ data, setData, user }) {
+  const [cat, setCat] = useState("cocina");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ nombre: "", cantidad: "", unidad: "unidades", minimo: "" });
+  const [editId, setEditId] = useState(null);
+  const [busqueda, setBusqueda] = useState("");
+  const catInfo = STOCK_CATS.find(c => c.id === cat);
+  const items = (data.stock[cat]||[]).filter(s => s.nombre.toLowerCase().includes(busqueda.toLowerCase()));
+
+  const guardar = () => {
+    if (!form.nombre || !form.cantidad) return;
+    if (editId) {
+      setData(d => ({ ...d, stock: { ...d.stock, [cat]: d.stock[cat].map(s => s.id===editId?{...form,id:editId}:s) } }));
+      setEditId(null);
+    } else {
+      setData(d => ({ ...d, stock: { ...d.stock, [cat]: [...(d.stock[cat]||[]), { ...form, id: Date.now(), cargadoPor: user.name }] } }));
+    }
+    setForm({ nombre: "", cantidad: "", unidad: "unidades", minimo: "" }); setShowForm(false);
+  };
+  const eliminar = (id) => setData(d => ({ ...d, stock: { ...d.stock, [cat]: d.stock[cat].filter(s => s.id!==id) } }));
+  const editar   = (item) => { setForm(item); setEditId(item.id); setShowForm(true); };
+  const ajustar  = (id, delta) => setData(d => ({ ...d, stock: { ...d.stock, [cat]: d.stock[cat].map(s => s.id===id?{...s,cantidad:String(Math.max(0,Number(s.cantidad)+delta))}:s) } }));
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 700, color: T.ink }}>📦 Stock</div>
+        <Btn onClick={() => { setShowForm(!showForm); setEditId(null); setForm({ nombre:"",cantidad:"",unidad:"unidades",minimo:"" }); }}>
+          {showForm&&!editId?"Cancelar":"+ Agregar"}
+        </Btn>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
+        {STOCK_CATS.map(c => {
+          const bajo = (data.stock[c.id]||[]).filter(s => s.minimo&&Number(s.cantidad)<=Number(s.minimo)).length;
+          const sel  = cat===c.id;
+          return (
+            <button key={c.id} onClick={() => { setCat(c.id); setShowForm(false); setBusqueda(""); }}
+              style={{ background:sel?c.color:T.card, color:sel?"#fff":T.inkMid, border:`2px solid ${sel?c.color:T.border}`, borderRadius:14, padding:"14px 10px", fontWeight:700, fontSize:14, cursor:"pointer", position:"relative", transition:"all .18s", boxShadow:sel?`0 4px 16px ${c.color}44`:"0 1px 4px #0000000a", transform:sel?"translateY(-2px)":"none" }}>
+              <div style={{ fontSize:22, marginBottom:4 }}>{c.label.split(" ")[0]}</div>
+              <div>{c.label.split(" ").slice(1).join(" ")}</div>
+              <div style={{ fontSize:12, marginTop:4, opacity:.8 }}>{(data.stock[c.id]||[]).length} productos</div>
+              {bajo>0 && <span style={{ position:"absolute",top:-6,right:-6,background:T.red,color:"#fff",borderRadius:"50%",width:20,height:20,fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center" }}>{bajo}</span>}
+            </button>
+          );
+        })}
+      </div>
+      {showForm && (
+        <Card style={{ borderColor: catInfo.color+"88", marginBottom: 20 }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:700, color:catInfo.color, marginBottom:14, fontSize:16 }}>
+            {editId?"Editar producto":`Nuevo — ${catInfo.label}`}
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+            <Field label="Producto *"><Inp value={form.nombre} onChange={v => setForm(f=>({...f,nombre:v}))} placeholder="Nombre" /></Field>
+            <Field label="Unidad">
+              <Sel value={form.unidad} onChange={v => setForm(f=>({...f,unidad:v}))} options={[{v:"unidades",l:"Unidades"},{v:"kg",l:"Kg"},{v:"litros",l:"Litros"},{v:"cajas",l:"Cajas"},{v:"paquetes",l:"Paquetes"},{v:"docenas",l:"Docenas"}]} />
+            </Field>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+            <Field label="Cantidad *"><Inp type="number" value={form.cantidad} onChange={v => setForm(f=>({...f,cantidad:v}))} placeholder="Ej: 24" /></Field>
+            <Field label="Mínimo alerta"><Inp type="number" value={form.minimo} onChange={v => setForm(f=>({...f,minimo:v}))} placeholder="Ej: 5" /></Field>
+          </div>
+          <div style={{ display:"flex", gap:8 }}>
+            <Btn onClick={guardar}>{editId?"Actualizar":"Guardar"}</Btn>
+            {editId && <Btn variant="ghost" onClick={() => { setShowForm(false); setEditId(null); }}>Cancelar</Btn>}
+          </div>
+        </Card>
+      )}
+      <Inp value={busqueda} onChange={setBusqueda} placeholder={`🔍 Buscar en ${catInfo.label}...`} style={{ marginBottom:14 }} />
+      {items.length===0
+        ? <div style={{ textAlign:"center", paddingTop:50, color:T.inkLight }}><div style={{ fontSize:40, marginBottom:10 }}>📦</div>{(data.stock[cat]||[]).length===0?`No hay productos en ${catInfo.label}.`:"No se encontraron."}</div>
+        : <div style={{ display:"grid", gap:10 }}>
+            {items.map(item => {
+              const critico = item.minimo&&Number(item.cantidad)<=Number(item.minimo);
+              return (
+                <div key={item.id} style={{ background:T.card, borderRadius:12, padding:"14px 18px", border:`1px solid ${critico?T.red+"66":T.border}`, borderLeft:`4px solid ${critico?T.red:catInfo.color}`, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:4 }}>
+                      <span style={{ fontWeight:700, fontSize:15, color:T.ink }}>{item.nombre}</span>
+                      {critico && <Tag color={T.red}>⚠️ Bajo mínimo</Tag>}
+                    </div>
+                    {item.minimo && <div style={{ color:T.inkLight, fontSize:12 }}>Mínimo: {item.minimo} {item.unidad}</div>}
+                    {item.cargadoPor && <div style={{ color:T.inkLight, fontSize:11 }}>Por {item.cargadoPor}</div>}
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10, background:T.bgDeep, borderRadius:10, padding:"8px 14px" }}>
+                      <button onClick={() => ajustar(item.id,-1)} style={{ background:"none",border:"none",color:T.red,cursor:"pointer",fontSize:22,fontWeight:900,padding:0,lineHeight:1 }}>−</button>
+                      <span style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:800, fontSize:20, color:critico?T.red:catInfo.color, minWidth:32, textAlign:"center" }}>{item.cantidad}</span>
+                      <span style={{ color:T.inkLight, fontSize:11 }}>{item.unidad}</span>
+                      <button onClick={() => ajustar(item.id,1)} style={{ background:"none",border:"none",color:T.green,cursor:"pointer",fontSize:22,fontWeight:900,padding:0,lineHeight:1 }}>+</button>
+                    </div>
+                    <button onClick={() => editar(item)} style={{ background:"none",border:"none",color:T.inkLight,cursor:"pointer",fontSize:16 }}>✏️</button>
+                    <button onClick={() => eliminar(item.id)} style={{ background:"none",border:"none",color:T.red,cursor:"pointer",fontSize:16 }}>✕</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+      }
+    </div>
+  );
+}
+
+function Faltantes({ data, setData, user }) {
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ nombre:"", cantidad:"", unidad:"unidades", urgencia:"media", seccion:"cocina", notas:"" });
+
+  const guardar = () => {
+    if (!form.nombre.trim()) return;
+    setData(d => ({ ...d, faltantes: [...d.faltantes, { ...form, id:Date.now(), resuelto:false, cargadoPor:user.name }] }));
+    setForm({ nombre:"",cantidad:"",unidad:"unidades",urgencia:"media",seccion:"cocina",notas:"" });
+    setShowForm(false);
+  };
+  const toggle   = (id) => setData(d => ({ ...d, faltantes: d.faltantes.map(f => f.id===id?{...f,resuelto:!f.resuelto,resueltoBy:user.name}:f) }));
+  const eliminar = (id) => setData(d => ({ ...d, faltantes: d.faltantes.filter(f => f.id!==id) }));
+  const limpiar  = ()   => setData(d => ({ ...d, faltantes: d.faltantes.filter(f => !f.resuelto) }));
+
+  const pendientes = data.faltantes.filter(f=>!f.resuelto).sort((a,b)=>({alta:0,media:1,baja:2}[a.urgencia]-{alta:0,media:1,baja:2}[b.urgencia]));
+  const resueltos  = data.faltantes.filter(f=>f.resuelto);
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+        <div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:700, color:T.ink }}>🛒 Faltantes</div>
+          <div style={{ color:T.inkLight, fontSize:12, marginTop:2 }}>{pendientes.length} pendiente{pendientes.length!==1?"s":""} · {resueltos.length} resuelto{resueltos.length!==1?"s":""}</div>
+        </div>
+        <div style={{ display:"flex", gap:8 }}>
+          {resueltos.length>0 && <Btn small variant="ghost" onClick={limpiar}>Limpiar resueltos</Btn>}
+          <Btn onClick={() => setShowForm(!showForm)}>{showForm?"Cancelar":"+ Agregar"}</Btn>
+        </div>
+      </div>
+      {showForm && (
+        <Card style={{ borderColor:T.red+"88", marginBottom:24 }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:700, color:T.red, marginBottom:16, fontSize:16 }}>Nuevo faltante</div>
+          <Field label="¿Qué falta? *" style={{ marginBottom:14 }}><Inp value={form.nombre} onChange={v => setForm(f=>({...f,nombre:v}))} placeholder="Nombre del producto" /></Field>
+          <Field label="Urgencia" style={{ marginBottom:14 }}>
+            <div style={{ display:"flex", gap:8 }}>
+              {URGENCIAS.map(u => <Chip key={u.v} label={u.l} selected={form.urgencia===u.v} color={u.color} onClick={() => setForm(f=>({...f,urgencia:u.v}))} />)}
+            </div>
+          </Field>
+          <Field label="Sección" style={{ marginBottom:14 }}>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              {STOCK_CATS.map(c => <Chip key={c.id} label={c.label} selected={form.seccion===c.id} color={c.color} onClick={() => setForm(f=>({...f,seccion:c.id}))} />)}
+            </div>
+          </Field>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
+            <Field label="Cantidad"><Inp type="number" value={form.cantidad} onChange={v => setForm(f=>({...f,cantidad:v}))} placeholder="Opcional" /></Field>
+            <Field label="Unidad"><Sel value={form.unidad} onChange={v => setForm(f=>({...f,unidad:v}))} options={[{v:"unidades",l:"Unidades"},{v:"kg",l:"Kg"},{v:"litros",l:"Litros"},{v:"cajas",l:"Cajas"}]} /></Field>
+          </div>
+          <Field label="Notas" style={{ marginBottom:16 }}><Inp value={form.notas} onChange={v => setForm(f=>({...f,notas:v}))} placeholder="Proveedor, referencia..." /></Field>
+          <Btn onClick={guardar}>Guardar</Btn>
+        </Card>
+      )}
+      {pendientes.length===0&&resueltos.length===0 && (
+        <div style={{ textAlign:"center", paddingTop:60, color:T.inkLight }}>
+          <div style={{ fontSize:48, marginBottom:12 }}>✅</div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:20 }}>¡Todo completo!</div>
+        </div>
+      )}
+      {pendientes.length>0 && (
+        <div style={{ display:"grid", gap:10, marginBottom:24 }}>
+          {pendientes.map(item => {
+            const urg = URGENCIAS.find(u=>u.v===item.urgencia);
+            const sec = STOCK_CATS.find(c=>c.id===item.seccion);
+            return (
+              <div key={item.id} style={{ background:T.card, border:`1px solid ${urg.color}44`, borderLeft:`4px solid ${urg.color}`, borderRadius:12, padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:10 }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:4, flexWrap:"wrap" }}>
+                    <span style={{ fontWeight:700, fontSize:15, color:T.ink }}>{item.nombre}</span>
+                    <Tag color={urg.color}>{urg.l}</Tag>
+                    {sec && <Tag color={sec.color}>{sec.label}</Tag>}
+                  </div>
+                  <div style={{ color:T.inkLight, fontSize:12 }}>
+                    {item.cantidad&&`${item.cantidad} ${item.unidad}`}
+                    {item.notas&&` · ${item.notas}`}
+                    {item.cargadoPor&&` · Por ${item.cargadoPor}`}
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <Btn small variant="success" onClick={() => toggle(item.id)}>✓ Resuelto</Btn>
+                  <button onClick={() => eliminar(item.id)} style={{ background:"none",border:"none",color:T.red,cursor:"pointer",fontSize:16 }}>✕</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {resueltos.length>0 && (<>
+        <Divider label="Resueltos" />
+        {resueltos.map(item => (
+          <div key={item.id} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:12, padding:"11px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", opacity:.5, marginBottom:8 }}>
+            <div>
+              <span style={{ color:T.inkMid, textDecoration:"line-through", fontSize:14 }}>{item.nombre}</span>
+              {item.resueltoBy && <span style={{ color:T.inkLight, fontSize:11 }}> · Resuelto por {item.resueltoBy}</span>}
+            </div>
+            <div style={{ display:"flex", gap:8 }}>
+              <Btn small variant="ghost" onClick={() => toggle(item.id)}>↩ Reabrir</Btn>
+              <button onClick={() => eliminar(item.id)} style={{ background:"none",border:"none",color:T.red,cursor:"pointer",fontSize:14 }}>✕</button>
+            </div>
+          </div>
+        ))}
+      </>)}
+    </div>
+  );
+}
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [tab, setTab]   = useState("dashboard");
+  const [data, setData] = useState(loadData);
+
+  useEffect(() => {
+    const s = loadSession();
+    if (s) { const u = USERS.find(u => u.id===s); if (u) setUser(u); }
+  }, []);
+
+  useEffect(() => { saveData(data); }, [data]);
+
+  const login  = (u) => { setUser(u); saveSession(u.id); setTab("dashboard"); };
+  const logout = ()  => { setUser(null); clearSession(); };
+
+  const faltUrg   = data.faltantes.filter(f=>!f.resuelto&&f.urgencia==="alta").length;
+  const stockAlrt = STOCK_CATS.reduce((acc,c) => acc+(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).length, 0);
+
+  const TABS = [
+    { id:"dashboard", icon:"🏠", label:"Inicio" },
+    { id:"eventos",   icon:"🎉", label:"Eventos" },
+    { id:"stock",     icon:"📦", label:"Stock",     badge:stockAlrt },
+    { id:"faltantes", icon:"🛒", label:"Faltantes", badge:faltUrg },
+  ];
+
+  if (!user) return <Login onLogin={login} />;
+
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, fontFamily:"'Lora',Georgia,serif", color:T.ink }}>
+      <div style={{ background:T.card, borderBottom:`1px solid ${T.border}`, padding:"0 24px", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 14px #00000010" }}>
+        <div style={{ maxWidth:880, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontWeight:900, fontSize:22, color:T.gold, padding:"13px 0", letterSpacing:1 }}>✦ SalónPro</div>
+          <nav style={{ display:"flex", gap:2 }}>
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{ background:tab===t.id?T.goldLight:"transparent", color:tab===t.id?T.gold:T.inkMid, border:"none", borderRadius:10, padding:"10px 15px", fontWeight:tab===t.id?700:500, fontSize:14, cursor:"pointer", position:"relative", transition:"all .15s" }}>
+                {t.icon} {t.label}
+                {t.badge>0 && <span style={{ position:"absolute",top:5,right:4,background:T.red,color:"#fff",borderRadius:"50%",width:17,height:17,fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center" }}>{t.badge}</span>}
+              </button>
+            ))}
+          </nav>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <div style={{ background:user.bg, border:`1.5px solid ${user.color}44`, borderRadius:30, padding:"6px 14px 6px 8px", display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontSize:20 }}>{user.avatar}</span>
+              <span style={{ fontWeight:700, fontSize:13, color:user.color }}>{user.name}</span>
+            </div>
+            <button onClick={logout} style={{ background:"none", border:`1.5px solid ${T.border}`, borderRadius:8, padding:"6px 12px", color:T.inkLight, fontSize:12, cursor:"pointer", fontWeight:600 }}>Salir</button>
+          </div>
+        </div>
+      </div>
+      <div style={{ maxWidth:880, margin:"0 auto", padding:"28px 20px 60px" }}>
+        {tab==="dashboard" && <Dashboard  data={data} user={user} />}
+        {tab==="eventos"   && <Eventos    data={data} setData={setData} user={user} />}
+        {tab==="stock"     && <Stock      data={data} setData={setData} user={user} />}
+        {tab==="faltantes" && <Faltantes  data={data} setData={setData} user={user} />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
