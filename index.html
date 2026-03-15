@@ -116,11 +116,6 @@ button { min-height: 44px; }
 .flip-back { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
 
 /* ── NAVBAR BOTTOM para móvil ── */
-@media (max-width: 600px) {
-  .navbar-top { display: none !important; }
-  .navbar-bottom { display: flex !important; }
-  .page-content { padding-bottom: 80px !important; }
-}
 .navbar-bottom {
   display: none;
   position: fixed; bottom: 0; left: 0; right: 0;
@@ -150,6 +145,11 @@ button { min-height: 44px; }
   border-radius: 2px; width: 16px; height: 16px;
   font-size: 9px; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
+}
+@media (max-width: 600px) {
+  .navbar-top { display: none !important; }
+  .navbar-bottom { display: flex !important; }
+  .page-content { padding-bottom: 80px !important; }
 }
 
 /* ── INPUTS — tamaño mínimo 16px para evitar zoom en iOS ── */
@@ -998,10 +998,6 @@ return<div style={{minHeight:“100vh”,background:T.bg,fontFamily:”‘Lora�
     <span>Papelera</span>
     {pc>0&&<span className="nav-badge">{pc}</span>}
   </button>
-</div>
-
-{/* Header móvil — usuario + salir */}
-<div style={{display:"none"}} className="mobile-header">
 </div>
 
 {/* CONTENIDO */}
