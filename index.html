@@ -3,607 +3,432 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="theme-color" content="#0f1729"/>
   <title>SalónPro</title>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&display=swap" rel="stylesheet"/>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    /* ── RESET & BASE ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
-    body {
-      background: #0f1729;
-      font-family: 'Lora', Georgia, serif;
-      color: #b2ccd6;
-      -webkit-font-smoothing: antialiased;
-      overscroll-behavior-y: none;
-    }
-    input, select, button, textarea { font-family: 'Lora', Georgia, serif; }
-    input::placeholder { color: #4a6070; }
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-text-size-adjust:100%;touch-action:manipulation}
+    body{background:#0f1729;font-family:'Lora',Georgia,serif;color:#b2ccd6;-webkit-font-smoothing:antialiased}
+    input,select,button{font-family:'Lora',Georgia,serif}
+    input{font-size:16px!important}
+    select{font-size:16px!important}
+    input::placeholder{color:#4a6070}
+    input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
+    button,a,label,[role=button]{-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:#0a0f1e}
+    ::-webkit-scrollbar-thumb{background:#2a3347;border-radius:2px}
 
 ```
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #0a0f1e; }
-::-webkit-scrollbar-thumb { background: #2a3347; border-radius: 2px; }
+.trash-btn{width:44px;height:44px;border-radius:3px;border:1.5px solid #2a3347;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.trash-btn:active{background:#f8717130;border-color:#f87171}
+.trash-svg{width:16px;height:16px;fill:#4a6070}
+.trash-btn:active .trash-svg{fill:#f87171}
 
-/* ── TOUCH — eliminar delay y highlight en todos los elementos táctiles ── */
-button, a, label, [role="button"] {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  cursor: pointer;
-}
+.cb{display:none}
+.cl{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;background:#1d2535;border-radius:4px;border:1px solid #2a3347;margin-bottom:8px;user-select:none;-webkit-tap-highlight-color:transparent;min-height:56px}
+.cl:active{background:#34d39910}
+.cbox{width:24px;height:24px;flex-shrink:0;border:2px solid #2a3347;border-radius:2px;display:flex;align-items:center;justify-content:center;background:#0a0f1e;transition:all .2s}
+.cb:checked+.cl .cbox{background:#34d399;border-color:#34d399;box-shadow:0 0 10px #34d39933}
+.cb:checked+.cl .ct{text-decoration:line-through;color:#4a6070}
+.cb:checked+.cl{opacity:.55}
+.ci{opacity:0;transform:scale(0);transition:all .18s}
+.cb:checked+.cl .ci{opacity:1;transform:scale(1)}
 
-/* ── BOTONES — mínimo 44px de alto para touch targets ── */
-button { min-height: 44px; }
+.flip-wrap{perspective:1000px;-webkit-tap-highlight-color:transparent}
+.flip-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);-webkit-transition:-webkit-transform .55s cubic-bezier(.4,0,.2,1)}
+.flipped .flip-inner{transform:rotateY(180deg);-webkit-transform:rotateY(180deg)}
+.ffront,.fback{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:4px;overflow:hidden}
+.fback{transform:rotateY(180deg);-webkit-transform:rotateY(180deg)}
 
-/* ── TRASH BTN ── */
-.trash-btn {
-  width: 44px; height: 44px;
-  border-radius: 3px;
-  border: 1.5px solid #2a3347;
-  background: transparent;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s, border-color .15s;
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-.trash-btn:active { background: #f8717130; border-color: #f87171; }
-@media (hover: hover) {
-  .trash-btn:hover { background: #f8717118; border-color: #f87171; box-shadow: 0 0 12px #f8717133; }
-  .trash-btn:hover .trash-svg { fill: #f87171; }
-}
-.trash-svg { width: 16px; height: 16px; fill: #4a6070; transition: fill .15s; }
+.nb{display:none;position:fixed;bottom:0;left:0;right:0;background:#1d2535;border-top:1px solid #2a3347;z-index:100;box-shadow:0 -4px 20px #00000060}
+.nbb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px;background:none;border:none;color:#7a90a4;font-size:11px;font-weight:600;cursor:pointer;min-height:60px;position:relative;-webkit-tap-highlight-color:transparent;font-family:'Lora',Georgia,serif;letter-spacing:.3px}
+.nbb.act{color:#818cf8}
+.nbi{font-size:22px;line-height:1}
+.nbadge{position:absolute;top:6px;right:calc(50% - 20px);background:#f87171;color:#fff;border-radius:2px;width:16px;height:16px;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center}
 
-/* ── CHECKLIST ── */
-.checklist-cb { display: none; }
-.checklist-label {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 16px;
-  cursor: pointer;
-  background: #1d2535;
-  border-radius: 4px;
-  border: 1px solid #2a3347;
-  margin-bottom: 8px;
-  transition: background .2s, border-color .2s;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  min-height: 56px;
+@media(max-width:600px){
+  .nt{display:none!important}
+  .nb{display:flex!important}
+  .pc{padding-bottom:80px!important}
 }
-.checklist-label:active { background: #34d39910; }
-@media (hover: hover) { .checklist-label:hover { border-color: #34d39966; background: #34d39908; } }
-.checklist-box {
-  width: 24px; height: 24px; flex-shrink: 0;
-  border: 2px solid #2a3347; border-radius: 2px;
-  display: flex; align-items: center; justify-content: center;
-  transition: all .2s; background: #0a0f1e;
-}
-.checklist-cb:checked + .checklist-label .checklist-box { background: #34d399; border-color: #34d399; box-shadow: 0 0 10px #34d39933; }
-.checklist-cb:checked + .checklist-label .checklist-text { text-decoration: line-through; color: #4a6070; }
-.checklist-cb:checked + .checklist-label { opacity: .55; }
-.check-icon { opacity: 0; transform: scale(0); transition: all .18s; }
-.checklist-cb:checked + .checklist-label .check-icon { opacity: 1; transform: scale(1); }
-
-/* ── FLIP CARD — 100% controlado por React state, sin :hover ── */
-.flip-card { perspective: 1000px; -webkit-tap-highlight-color: transparent; }
-.flip-inner {
-  width: 100%; height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-  transition: transform 0.55s cubic-bezier(.4,0,.2,1);
-  -webkit-transition: -webkit-transform 0.55s cubic-bezier(.4,0,.2,1);
-}
-.flip-card.flipped .flip-inner {
-  transform: rotateY(180deg);
-  -webkit-transform: rotateY(180deg);
-}
-.flip-front, .flip-back {
-  position: absolute; inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.flip-back { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
-
-/* ── NAVBAR BOTTOM para móvil ── */
-.navbar-bottom {
-  display: none;
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: #1d2535;
-  border-top: 1px solid #2a3347;
-  z-index: 100;
-  padding: 0;
-  box-shadow: 0 -4px 20px #00000060;
-}
-.nav-bottom-btn {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 3px; padding: 10px 4px;
-  background: none; border: none;
-  color: #7a90a4; font-size: 10px; font-weight: 600;
-  cursor: pointer; transition: color .15s;
-  min-height: 60px; position: relative;
-  -webkit-tap-highlight-color: transparent;
-  font-family: 'Lora', Georgia, serif;
-  letter-spacing: .3px;
-}
-.nav-bottom-btn.active { color: #818cf8; }
-.nav-bottom-btn .nav-icon { font-size: 20px; line-height: 1; }
-.nav-badge {
-  position: absolute; top: 6px; right: calc(50% - 18px);
-  background: #f87171; color: #fff;
-  border-radius: 2px; width: 16px; height: 16px;
-  font-size: 9px; font-weight: 900;
-  display: flex; align-items: center; justify-content: center;
-}
-@media (max-width: 600px) {
-  .navbar-top { display: none !important; }
-  .navbar-bottom { display: flex !important; }
-  .page-content { padding-bottom: 80px !important; }
-}
-
-/* ── INPUTS — tamaño mínimo 16px para evitar zoom en iOS ── */
-input, select { font-size: 16px !important; }
-@media (min-width: 601px) { input, select { font-size: 14px !important; } }
 ```
 
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel">
-const { useState, useEffect, useCallback } = React;
+<div id="app"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script>
+const {createElement:h,useState,useEffect,useCallback,Fragment}=React;
 
-const STORAGE_KEY = “salonpro_v5”;
-const SESSION_KEY = “salonpro_session”;
-const DIAS_PAPELERA = 7;
+const SK=“salonpro_v5”,SEK=“salonpro_session”,DIAS=7;
+const dd=()=>({eventos:[],stock:{cocina:[],mozos:[],limpieza:[],freezer:[]},faltantes:[],papelera:[]});
+const ld=()=>{try{const s=localStorage.getItem(SK);if(s)return JSON.parse(s)}catch{}return dd()};
+const sd=d=>{try{localStorage.setItem(SK,JSON.stringify(d))}catch{}};
+const ls=()=>{try{return localStorage.getItem(SEK)}catch{}return null};
+const ss=u=>{try{localStorage.setItem(SEK,u)}catch{}};
+const cs=()=>{try{localStorage.removeItem(SEK)}catch{}};
 
-const defaultData = () => ({ eventos:[], stock:{cocina:[],mozos:[],limpieza:[],freezer:[]}, faltantes:[], papelera:[] });
-function loadData() { try{const s=localStorage.getItem(STORAGE_KEY);if(s)return JSON.parse(s);}catch{}return defaultData(); }
-function saveData(d) { try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}catch{} }
-function loadSession() { try{return localStorage.getItem(SESSION_KEY);}catch{}return null; }
-function saveSession(u) { try{localStorage.setItem(SESSION_KEY,u);}catch{} }
-function clearSession() { try{localStorage.removeItem(SESSION_KEY);}catch{} }
-
-const USERS = [
-{ id:“cordoba”, name:“Córdoba”, avatar:“👨‍💼”, color:”#818cf8”, bg:”#818cf820”, role:“Administración” },
-{ id:“jere”,    name:“Jere”,    avatar:“🤵”,   color:”#34d399”, bg:”#34d39920”, role:“Servicio” },
-{ id:“erica”,   name:“Érica”,   avatar:“👑”,   color:”#c084fc”, bg:”#c084fc20”, role:“Coordinación” },
+const USERS=[
+{id:“cordoba”,name:“Córdoba”,avatar:“👨‍💼”,color:”#818cf8”,bg:”#818cf820”,role:“Administración”},
+{id:“jere”,   name:“Jere”,   avatar:“🤵”,  color:”#34d399”,bg:”#34d39920”,role:“Servicio”},
+{id:“erica”,  name:“Érica”,  avatar:“👑”,  color:”#c084fc”,bg:”#c084fc20”,role:“Coordinación”},
 ];
 
-const T = {
-bg:”#0f1729”, bgDeep:”#0a0f1e”, bgCard:”#1d2535”,
-border:”#2a3347”, ink:”#b2ccd6”, inkBright:”#e2e8f0”, inkMid:”#7a90a4”, inkLight:”#4a6070”,
-blue:”#818cf8”, blueGlow:”#818cf833”, violet:”#c084fc”, violetGlow:”#c084fc33”,
-cyan:”#22d3ee”, green:”#34d399”, greenGlow:”#34d39933”,
-red:”#f87171”, redGlow:”#f8717133”, gold:”#fbbf24”,
+const T={
+bg:”#0f1729”,bgD:”#0a0f1e”,bgC:”#1d2535”,
+brd:”#2a3347”,ink:”#b2ccd6”,inkB:”#e2e8f0”,inkM:”#7a90a4”,inkL:”#4a6070”,
+blue:”#818cf8”,blueG:”#818cf833”,violet:”#c084fc”,
+cyan:”#22d3ee”,green:”#34d399”,greenG:”#34d39933”,
+red:”#f87171”,redG:”#f8717133”,gold:”#fbbf24”,
 };
-const R = { card:4, field:3, btn:3, chip:3, badge:2 };
+const R={c:4,f:3,b:3,ch:3,ba:2};
 
-const TIPO_EVENTO = [
-{v:“quince”,l:“👑 15 Años”,color:T.violet},
-{v:“boda”,  l:“💍 Boda”,  color:T.blue},
-{v:“otro”,  l:“🎊 Otro”,  color:T.cyan},
-];
-const STOCK_CATS = [
-{id:“cocina”,  label:“🍳 Cocina”,  color:T.red},
-{id:“mozos”,   label:“🤵 Mozos”,   color:T.blue},
-{id:“limpieza”,label:“🧹 Limpieza”,color:T.green},
-{id:“freezer”, label:“❄️ Freezer”, color:T.cyan},
-];
-const URGENCIAS   = [{v:“alta”,l:“🔴 Alta”,color:T.red},{v:“media”,l:“🟡 Media”,color:T.gold},{v:“baja”,l:“🟢 Baja”,color:T.green}];
-const PRIMER_PLATO= [“Creppes”,“Canelones”,“Fiambre y mayo de ave”,“Fiambre mayo rusa”,“Capelettis”,“Ravioles”];
-const ESPECIALES  = [“Celíaco”,“Sin sal”,“Diabético”,“Vegetariano”,“Vegano”,“Sin lactosa”,“Celíaco-sin lactosa”,“Otro”];
-const SOBREMESA   = [“Sándwiches de miga”,“Pata flambeada”];
-const POSTRE      = [“Copa Macedonia”,“Helado solo”];
-const CAMP_POSTRE = [“Copa mousse”,“Helado solo”,“Copa Macedonia”];
+const TE=[{v:“quince”,l:“👑 15 Años”,color:T.violet},{v:“boda”,l:“💍 Boda”,color:T.blue},{v:“otro”,l:“🎊 Otro”,color:T.cyan}];
+const SC=[{id:“cocina”,label:“🍳 Cocina”,color:T.red},{id:“mozos”,label:“🤵 Mozos”,color:T.blue},{id:“limpieza”,label:“🧹 Limpieza”,color:T.green},{id:“freezer”,label:“❄️ Freezer”,color:T.cyan}];
+const UG=[{v:“alta”,l:“🔴 Alta”,color:T.red},{v:“media”,l:“🟡 Media”,color:T.gold},{v:“baja”,l:“🟢 Baja”,color:T.green}];
+const PP=[“Creppes”,“Canelones”,“Fiambre y mayo de ave”,“Fiambre mayo rusa”,“Capelettis”,“Ravioles”];
+const EP=[“Celíaco”,“Sin sal”,“Diabético”,“Vegetariano”,“Vegano”,“Sin lactosa”,“Celíaco-sin lactosa”,“Otro”];
+const SB=[“Sándwiches de miga”,“Pata flambeada”];
+const PO=[“Copa Macedonia”,“Helado solo”];
+const CP=[“Copa mousse”,“Helado solo”,“Copa Macedonia”];
 
-// ── PRIMITIVES ────────────────────────────────────────────────────────────────
-function TrashBtn({onClick}) {
-return <button className=“trash-btn” onTouchEnd={e=>{e.preventDefault();onClick();}} onClick={onClick}>
-<svg viewBox="0 0 448 512" className="trash-svg"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
-</button>;
-}
+// ── helpers ──
+const s=(o,…r)=>Object.assign({},o,…r);
+const gc=(color,sel)=>({background:sel?color+“25”:T.bgD,color:sel?color:T.inkM,border:`1.5px solid ${sel?color:T.brd}`,borderRadius:R.ch,fontWeight:sel?700:500,cursor:“pointer”,transition:“all .15s”,boxShadow:sel?`0 0 12px ${color}44`:“none”,whiteSpace:“nowrap”,fontFamily:“inherit”,WebkitTapHighlightColor:“transparent”});
 
-function Chip({label,selected,color=T.blue,onClick,small}) {
-return <button
-onTouchEnd={e=>{e.preventDefault();onClick();}}
-onClick={onClick}
-style={{
-background:selected?color+“25”:T.bgDeep, color:selected?color:T.inkMid,
-border:`1.5px solid ${selected?color:T.border}`, borderRadius:R.chip,
-padding:small?“6px 14px”:“9px 20px”, fontWeight:selected?700:500,
-fontSize:small?13:14, cursor:“pointer”, transition:“all .15s”,
-boxShadow:selected?`0 0 12px ${color}44`:“none”, whiteSpace:“nowrap”,
-fontFamily:“inherit”, minHeight:small?38:44,
-WebkitTapHighlightColor:“transparent”,
-}}>{label}</button>;
-}
+// ── COMPONENTS ──
+const TrashIcon=()=>h(“svg”,{viewBox:“0 0 448 512”,className:“trash-svg”},h(“path”,{d:“M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z”}));
 
-function Btn({children,onClick,variant=“primary”,small,full,style={}}) {
+const Trash=({onClick})=>h(“button”,{className:“trash-btn”,onClick,onTouchEnd:e=>{e.preventDefault();onClick();}},h(TrashIcon));
+
+const Chip=({label,selected,color=T.blue,onClick,small})=>h(“button”,{
+onClick,onTouchEnd:e=>{e.preventDefault();onClick();},
+style:s(gc(color,selected),{padding:small?“6px 14px”:“9px 18px”,fontSize:small?13:14,minHeight:small?40:44,display:“inline-flex”,alignItems:“center”})
+},label);
+
+const Btn=({children,onClick,variant=“primary”,small,full,style:st={}})=>{
 const v={
-primary:{background:T.blue,color:T.bgDeep,border:`1.5px solid ${T.blue}`,boxShadow:`0 0 14px ${T.blueGlow}`},
+primary:{background:T.blue,color:T.bgD,border:`1.5px solid ${T.blue}`,boxShadow:`0 0 14px ${T.blueG}`},
 outline:{background:“transparent”,color:T.blue,border:`1.5px solid ${T.blue}`},
-ghost:{background:“transparent”,color:T.inkMid,border:`1.5px solid ${T.border}`},
+ghost:{background:“transparent”,color:T.inkM,border:`1.5px solid ${T.brd}`},
 danger:{background:T.red+“22”,color:T.red,border:`1.5px solid ${T.red}`},
 success:{background:T.green+“22”,color:T.green,border:`1.5px solid ${T.green}`},
 }[variant];
-return <button
-onTouchEnd={e=>{e.preventDefault();onClick&&onClick();}}
-onClick={onClick}
-style={{
-…v, display:“inline-flex”, alignItems:“center”, justifyContent:“center”, gap:6,
-fontWeight:700, cursor:“pointer”, borderRadius:R.btn,
-padding:small?“8px 16px”:“12px 24px”, fontSize:small?13:15,
-transition:“all .15s”, width:full?“100%”:undefined,
-fontFamily:“inherit”, minHeight:small?44:48,
-WebkitTapHighlightColor:“transparent”,
-…style,
-}}
-onTouchStart={e=>e.currentTarget.style.opacity=”.75”}
-onTouchCancel={e=>e.currentTarget.style.opacity=“1”}
+return h(“button”,{
+onClick,onTouchEnd:e=>{e.preventDefault();onClick&&onClick();},
+onTouchStart:e=>e.currentTarget.style.opacity=”.7”,
+onTouchCancel:e=>e.currentTarget.style.opacity=“1”,
+onTouchEnd:e=>{e.currentTarget.style.opacity=“1”;e.preventDefault();onClick&&onClick();},
+style:s(v,{display:“inline-flex”,alignItems:“center”,justifyContent:“center”,gap:6,fontWeight:700,cursor:“pointer”,borderRadius:R.b,padding:small?“8px 16px”:“11px 22px”,fontSize:small?13:15,transition:“all .15s”,width:full?“100%”:undefined,fontFamily:“inherit”,minHeight:small?44:48,WebkitTapHighlightColor:“transparent”},st)
+},children);
+};
 
-> {children}</button>;
-> }
+const Inp=({value,onChange,placeholder,type=“text”,style:st={}})=>h(“input”,{type,value,onChange:e=>onChange(e.target.value),placeholder,style:s({background:T.bgD,border:`1.5px solid ${T.brd}`,borderRadius:R.f,padding:“12px 14px”,color:T.inkB,outline:“none”,width:“100%”,boxSizing:“border-box”,fontFamily:“inherit”},st)});
 
-function Field({label,children,style={}}) {
-return <div style={{display:“flex”,flexDirection:“column”,gap:6,…style}}>
-{label&&<label style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:“uppercase”,letterSpacing:1.5}}>{label}</label>}
-{children}
+const Sel=({value,onChange,options,style:st={}})=>h(“select”,{value,onChange:e=>onChange(e.target.value),style:s({background:T.bgD,border:`1.5px solid ${T.brd}`,borderRadius:R.f,padding:“12px 14px”,color:T.inkB,outline:“none”,width:“100%”,boxSizing:“border-box”,fontFamily:“inherit”},st)},options.map(o=>h(“option”,{key:o.v,value:o.v},o.l)));
 
-  </div>;
-}
+const Field=({label,children,style:st={}})=>h(“div”,{style:s({display:“flex”,flexDirection:“column”,gap:6},st)},label&&h(“label”,{style:{fontSize:11,fontWeight:700,color:T.inkL,textTransform:“uppercase”,letterSpacing:1.5}},label),children);
 
-function Inp({value,onChange,placeholder,type=“text”,style={}}) {
-return <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
-style={{background:T.bgDeep,border:`1.5px solid ${T.border}`,borderRadius:R.field,padding:“12px 14px”,color:T.inkBright,outline:“none”,width:“100%”,boxSizing:“border-box”,fontFamily:“inherit”,…style}}/>;
-}
+const Tag=({children,color=T.blue})=>h(“span”,{style:{background:color+“20”,color,border:`1px solid ${color}44`,borderRadius:R.ba,padding:“3px 10px”,fontSize:11,fontWeight:700,letterSpacing:.8,textTransform:“uppercase”,whiteSpace:“nowrap”}},children);
 
-function Sel({value,onChange,options,style={}}) {
-return <select value={value} onChange={e=>onChange(e.target.value)}
-style={{background:T.bgDeep,border:`1.5px solid ${T.border}`,borderRadius:R.field,padding:“12px 14px”,color:T.inkBright,outline:“none”,width:“100%”,boxSizing:“border-box”,fontFamily:“inherit”,…style}}>
-{options.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
-</select>;
-}
+const Card=({children,style:st={},accent,glow})=>h(“div”,{style:s({background:T.bgC,border:`1px solid ${accent?accent+"44":T.brd}`,borderLeft:accent?`3px solid ${accent}`:undefined,borderRadius:R.c,padding:“16px 18px”,boxShadow:glow?`0 0 20px ${glow}`:“0 2px 10px #00000030”},st)},children);
 
-function Tag({children,color=T.blue}) {
-return <span style={{background:color+“20”,color,border:`1px solid ${color}44`,borderRadius:R.badge,padding:“3px 10px”,fontSize:11,fontWeight:700,letterSpacing:.8,textTransform:“uppercase”,whiteSpace:“nowrap”}}>{children}</span>;
-}
+const Divider=({label})=>h(“div”,{style:{display:“flex”,alignItems:“center”,gap:12,margin:“16px 0 10px”}},
+h(“div”,{style:{flex:1,height:1,background:T.brd}}),
+label&&h(“span”,{style:{color:T.inkL,fontSize:11,fontWeight:700,textTransform:“uppercase”,letterSpacing:1.5,whiteSpace:“nowrap”}},label),
+h(“div”,{style:{flex:1,height:1,background:T.brd}})
+);
 
-function Card({children,style={},accent,glow}) {
-return <div style={{background:T.bgCard,border:`1px solid ${accent?accent+"44":T.border}`,borderLeft:accent?`3px solid ${accent}`:undefined,borderRadius:R.card,padding:“16px 18px”,boxShadow:glow?`0 0 20px ${glow}`:“0 2px 10px #00000030”,…style}}>{children}</div>;
-}
-
-function Divider({label}) {
-return <div style={{display:“flex”,alignItems:“center”,gap:12,margin:“18px 0 12px”}}>
-<div style={{flex:1,height:1,background:T.border}}/>
-{label&&<span style={{color:T.inkLight,fontSize:11,fontWeight:700,textTransform:“uppercase”,letterSpacing:1.5,whiteSpace:“nowrap”}}>{label}</span>}
-<div style={{flex:1,height:1,background:T.border}}/>
-
-  </div>;
-}
-
-function SeccionBox({title,color,children,defaultOpen=false}) {
+const Accordion=({title,color,children,open:defaultOpen=false})=>{
 const [open,setOpen]=useState(defaultOpen);
-return <div style={{border:`1px solid ${open?color+"44":T.border}`,borderRadius:R.card,overflow:“hidden”,marginBottom:8}}>
-<button
-onTouchEnd={e=>{e.preventDefault();setOpen(o=>!o);}}
-onClick={()=>setOpen(o=>!o)}
-style={{width:“100%”,background:open?color+“12”:T.bgDeep,border:“none”,padding:“14px 16px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,cursor:“pointer”,fontFamily:“inherit”,minHeight:50,WebkitTapHighlightColor:“transparent”}}>
-<span style={{fontWeight:700,fontSize:14,color:open?color:T.ink}}>{title}</span>
-<span style={{color:T.inkLight,fontSize:13,fontWeight:700}}>{open?“▲”:“▼”}</span>
-</button>
-{open&&<div style={{padding:“16px”,background:T.bgCard}}>{children}</div>}
+const toggle=()=>setOpen(o=>!o);
+return h(“div”,{style:{border:`1px solid ${open?color+"44":T.brd}`,borderRadius:R.c,overflow:“hidden”,marginBottom:8}},
+h(“button”,{onClick:toggle,onTouchEnd:e=>{e.preventDefault();toggle();},style:{width:“100%”,background:open?color+“12”:T.bgD,border:“none”,padding:“14px 16px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,cursor:“pointer”,fontFamily:“inherit”,minHeight:50,WebkitTapHighlightColor:“transparent”}},
+h(“span”,{style:{fontWeight:700,fontSize:14,color:open?color:T.ink}},title),
+h(“span”,{style:{color:T.inkL,fontSize:13,fontWeight:700}},open?“▲”:“▼”)
+),
+open&&h(“div”,{style:{padding:“16px”,background:T.bgC}},children)
+);
+};
 
-  </div>;
-}
+// ── LOGIN ────────────────────────────────────────────────────────────────────
+const Login=({onLogin})=>{
+const [flip,setFlip]=useState(null);
+return h(“div”,{style:{minHeight:“100vh”,background:`radial-gradient(ellipse at 50% 0%,#1d2d50 0%,${T.bg} 65%)`,display:“flex”,flexDirection:“column”,alignItems:“center”,justifyContent:“center”,padding:“24px 16px”}},
+h(“div”,{style:{textAlign:“center”,marginBottom:44}},
+h(“div”,{style:{fontSize:44,marginBottom:8,filter:“drop-shadow(0 0 24px #818cf8aa)”}}, “✦”),
+h(“div”,{style:{fontSize:36,fontWeight:900,color:T.blue,letterSpacing:3,textShadow:`0 0 40px ${T.blueG}`}},“SalónPro”),
+h(“div”,{style:{color:T.inkM,fontSize:13,marginTop:8,letterSpacing:2}},“SISTEMA DE GESTIÓN DE EVENTOS”)
+),
+h(“div”,{style:{display:“flex”,gap:20,flexWrap:“wrap”,justifyContent:“center”,width:“100%”,maxWidth:620}},
+USERS.map(u=>{
+const isFlipped=flip===u.id;
+return h(“div”,{key:u.id,style:{width:170,height:234,flex:“0 0 170px”}},
+h(“div”,{
+className:`flip-wrap${isFlipped?" flipped":""}`,
+style:{width:“100%”,height:“100%”},
+onTouchStart:()=>{if(!isFlipped)setFlip(u.id);},
+onClick:()=>{if(!isFlipped)setFlip(u.id);},
+},
+h(“div”,{className:“flip-inner”},
+// BACK
+h(“div”,{className:“fback”,style:{background:`linear-gradient(135deg,${u.color}22,${u.color}08)`,border:`1.5px solid ${u.color}66`,display:“flex”,flexDirection:“column”,alignItems:“center”,justifyContent:“center”,gap:12,boxShadow:`0 0 28px ${u.color}44`}},
+h(“div”,{style:{fontSize:48,filter:`drop-shadow(0 0 14px ${u.color})`}},u.avatar),
+h(“div”,{style:{fontSize:17,fontWeight:800,color:u.color}},u.name),
+h(“div”,{style:{fontSize:11,color:T.inkM,letterSpacing:1,textTransform:“uppercase”}},u.role),
+h(“button”,{
+onTouchEnd:e=>{e.preventDefault();e.stopPropagation();onLogin(u);},
+onClick:e=>{e.stopPropagation();onLogin(u);},
+onTouchStart:e=>{e.currentTarget.style.opacity=”.7”;},
+style:{marginTop:6,background:u.color,color:T.bgD,border:“none”,borderRadius:R.b,padding:“12px 0”,fontWeight:800,fontSize:15,cursor:“pointer”,fontFamily:“inherit”,boxShadow:`0 0 18px ${u.color}88`,WebkitTapHighlightColor:“transparent”,minHeight:48,width:“80%”}
+},“Ingresar”)
+),
+// FRONT
+h(“div”,{className:“ffront”,style:{background:T.bgC,border:`1.5px solid ${T.brd}`,boxShadow:“0 4px 24px #00000060”}},
+h(“div”,{style:{position:“absolute”,top:-40,left:-40,width:130,height:130,borderRadius:“50%”,background:u.color+“18”,filter:“blur(2px)”}}),
+h(“div”,{style:{position:“absolute”,top:-20,right:-30,width:90,height:90,borderRadius:“50%”,background:u.color+“12”,filter:“blur(4px)”}}),
+h(“div”,{style:{position:“relative”,zIndex:1,height:“100%”,display:“flex”,flexDirection:“column”,justifyContent:“flex-end”,padding:“16px 14px 18px”}},
+h(“div”,{style:{position:“absolute”,top:22,left:“50%”,transform:“translateX(-50%)”,fontSize:48,filter:`drop-shadow(0 0 8px ${u.color}66)`,pointerEvents:“none”}},u.avatar),
+h(“div”,{style:{marginBottom:8}},h(“span”,{style:{background:u.color+“22”,color:u.color,border:`1px solid ${u.color}44`,borderRadius:R.ba,padding:“3px 10px”,fontSize:10,fontWeight:700,letterSpacing:1,textTransform:“uppercase”}},u.role)),
+h(“div”,{style:{fontWeight:800,fontSize:18,color:T.inkB,marginBottom:4}},u.name),
+h(“div”,{style:{fontSize:11,color:T.inkM}},“Tocá para ingresar 👆”)
+)
+)
+)
+)
+);
+})
+),
+h(“div”,{style:{color:T.inkL,fontSize:12,marginTop:32,letterSpacing:1,textAlign:“center”}},“Tocá tu perfil → luego "Ingresar"”)
+);
+};
 
-// ── PAPELERA MODAL ────────────────────────────────────────────────────────────
-function PapeleraModal({papelera,onRestore,onDelete,onClose}) {
-const ahora=Date.now();
-const dias=f=>Math.max(0,DIAS_PAPELERA-Math.floor((ahora-f)/86400000));
-const LABELS={evento:“🎉 Evento”,stock:“📦 Stock”,faltante:“🛒 Faltante”};
-return <div style={{position:“fixed”,inset:0,background:”#000000aa”,zIndex:1000,display:“flex”,alignItems:“flex-end”,justifyContent:“center”,padding:0}} onClick={onClose}>
-<div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:“8px 8px 0 0”,width:“100%”,maxWidth:600,maxHeight:“85vh”,overflow:“hidden”,display:“flex”,flexDirection:“column”,boxShadow:“0 -4px 40px #00000080”}} onClick={e=>e.stopPropagation()}>
-<div style={{padding:“16px 20px”,borderBottom:`1px solid ${T.border}`,display:“flex”,justifyContent:“space-between”,alignItems:“center”}}>
-<div>
-<div style={{fontWeight:800,fontSize:17,color:T.inkBright,display:“flex”,alignItems:“center”,gap:8}}>
-<svg viewBox="0 0 448 512" style={{width:17,height:17,fill:T.inkMid}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
-Papelera
-</div>
-<div style={{color:T.inkLight,fontSize:12,marginTop:2}}>Se elimina solo a los {DIAS_PAPELERA} días</div>
-</div>
-<button onTouchEnd={e=>{e.preventDefault();onClose();}} onClick={onClose} style={{background:“none”,border:“none”,color:T.inkLight,cursor:“pointer”,fontSize:22,padding:“4px 8px”,minHeight:44,WebkitTapHighlightColor:“transparent”}}>✕</button>
-</div>
-<div style={{overflowY:“auto”,padding:“14px 18px”,flex:1,WebkitOverflowScrolling:“touch”}}>
-{papelera.length===0
-?<div style={{textAlign:“center”,padding:“40px 0”,color:T.inkLight}}>
-<svg viewBox=“0 0 448 512” style={{width:40,height:40,fill:T.inkLight,display:“block”,margin:“0 auto 12px”}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
-La papelera está vacía
-</div>
-:<div style={{display:“grid”,gap:8}}>
-{papelera.map((p,i)=>{
+// ── PAPELERA MODAL ───────────────────────────────────────────────────────────
+const PapeleraModal=({papelera,onRestore,onDelete,onClose})=>{
+const now=Date.now();
+const dias=f=>Math.max(0,DIAS-Math.floor((now-f)/86400000));
+const LB={evento:“🎉 Evento”,stock:“📦 Stock”,faltante:“🛒 Faltante”};
+return h(“div”,{onClick:onClose,style:{position:“fixed”,inset:0,background:”#000000aa”,zIndex:1000,display:“flex”,alignItems:“flex-end”,justifyContent:“center”}},
+h(“div”,{onClick:e=>e.stopPropagation(),style:{background:T.bgC,border:`1px solid ${T.brd}`,borderRadius:“8px 8px 0 0”,width:“100%”,maxWidth:600,maxHeight:“85vh”,overflow:“hidden”,display:“flex”,flexDirection:“column”,boxShadow:“0 -4px 40px #00000080”}},
+h(“div”,{style:{padding:“16px 20px”,borderBottom:`1px solid ${T.brd}`,display:“flex”,justifyContent:“space-between”,alignItems:“center”}},
+h(“div”,null,
+h(“div”,{style:{fontWeight:800,fontSize:17,color:T.inkB,display:“flex”,alignItems:“center”,gap:8}},
+h(“svg”,{viewBox:“0 0 448 512”,style:{width:17,height:17,fill:T.inkM}},h(“path”,{d:“M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z”})),
+“Papelera”
+),
+h(“div”,{style:{color:T.inkL,fontSize:12,marginTop:2}},`Se eliminan solos a los ${DIAS} días`)
+),
+h(“button”,{onTouchEnd:e=>{e.preventDefault();onClose();},onClick:onClose,style:{background:“none”,border:“none”,color:T.inkL,cursor:“pointer”,fontSize:24,padding:“4px 8px”,minHeight:44,WebkitTapHighlightColor:“transparent”}},“✕”)
+),
+h(“div”,{style:{overflowY:“auto”,padding:“14px 18px”,flex:1,WebkitOverflowScrolling:“touch”}},
+papelera.length===0
+?h(“div”,{style:{textAlign:“center”,padding:“40px 0”,color:T.inkL}},“La papelera está vacía”)
+:h(“div”,{style:{display:“grid”,gap:8}},
+papelera.map((p,i)=>{
 const d=dias(p.fechaEliminacion);
 const nombre=p.item.cliente||p.item.nombre||“Sin nombre”;
-return <div key={i} style={{background:T.bgDeep,border:`1px solid ${T.border}`,borderRadius:R.card,padding:“12px 14px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,gap:8,flexWrap:“wrap”}}>
-<div style={{flex:1,minWidth:0}}>
-<div style={{display:“flex”,gap:8,alignItems:“center”,marginBottom:4,flexWrap:“wrap”}}>
-<span style={{fontSize:12,color:T.inkLight}}>{LABELS[p.tipo]}</span>
-<span style={{fontWeight:700,color:T.inkBright,fontSize:14}}>{nombre}</span>
-</div>
-<div style={{display:“flex”,gap:10,flexWrap:“wrap”}}>
-<span style={{color:T.inkLight,fontSize:12}}>Por {p.eliminadoPor}</span>
-<span style={{color:d<=1?T.red:T.gold,fontSize:12,fontWeight:700}}>{d===0?“Se elimina hoy”:d===1?“Mañana”:`${d} días`}</span>
-</div>
-</div>
-<div style={{display:“flex”,gap:8}}>
-<Btn small variant=“ghost” onClick={()=>onRestore(i)}>↩ Restaurar</Btn>
-<TrashBtn onClick={()=>onDelete(i)}/>
-</div>
-</div>;
-})}
-</div>
-}
-</div>
-</div>
+return h(“div”,{key:i,style:{background:T.bgD,border:`1px solid ${T.brd}`,borderRadius:R.c,padding:“12px 14px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,gap:8,flexWrap:“wrap”}},
+h(“div”,{style:{flex:1,minWidth:0}},
+h(“div”,{style:{display:“flex”,gap:8,alignItems:“center”,marginBottom:4,flexWrap:“wrap”}},
+h(“span”,{style:{fontSize:12,color:T.inkL}},LB[p.tipo]),
+h(“span”,{style:{fontWeight:700,color:T.inkB,fontSize:14}},nombre)
+),
+h(“div”,{style:{display:“flex”,gap:10,flexWrap:“wrap”}},
+h(“span”,{style:{color:T.inkL,fontSize:12}},`Por ${p.eliminadoPor}`),
+h(“span”,{style:{color:d<=1?T.red:T.gold,fontSize:12,fontWeight:700}},d===0?“Se elimina hoy”:d===1?“Mañana”:`${d} días`)
+)
+),
+h(“div”,{style:{display:“flex”,gap:8}},
+h(Btn,{small:true,variant:“ghost”,onClick:()=>onRestore(i)},“↩ Restaurar”),
+h(Trash,{onClick:()=>onDelete(i)})
+)
+);
+})
+)
+)
+)
+);
+};
 
-  </div>;
-}
-
-// ── LOGIN — flip 100% touch-safe ─────────────────────────────────────────────
-function Login({onLogin}) {
-const [flip,setFlip]=useState(null);
-
-const handleTap=useCallback((u)=>{
-if(flip===u.id) return; // si ya está girada, el botón maneja el login
-setFlip(u.id);
-},[flip]);
-
-return <div style={{minHeight:“100vh”,background:`radial-gradient(ellipse at 50% 0%,#1d2d50 0%,${T.bg} 65%)`,display:“flex”,flexDirection:“column”,alignItems:“center”,justifyContent:“center”,padding:“24px 16px”}}>
-<div style={{textAlign:“center”,marginBottom:48}}>
-<div style={{fontSize:44,marginBottom:8,filter:“drop-shadow(0 0 24px #818cf8aa)”}}>✦</div>
-<div style={{fontSize:38,fontWeight:900,color:T.blue,letterSpacing:3,textShadow:`0 0 40px ${T.blueGlow}`}}>SalónPro</div>
-<div style={{color:T.inkMid,fontSize:13,marginTop:8,letterSpacing:2}}>SISTEMA DE GESTIÓN DE EVENTOS</div>
-</div>
-
-```
-<div style={{display:"flex",gap:20,flexWrap:"wrap",justifyContent:"center",width:"100%",maxWidth:620}}>
-  {USERS.map(u=>{
-    const isFlipped=flip===u.id;
-    return <div key={u.id} style={{width:170,height:240,flex:"0 0 170px"}}>
-      <div
-        className={`flip-card${isFlipped?" flipped":""}`}
-        style={{width:"100%",height:"100%"}}
-        onTouchStart={()=>{ if(!isFlipped) setFlip(u.id); }}
-        onClick={()=>{ if(!isFlipped) setFlip(u.id); }}
-      >
-        <div className="flip-inner">
-          {/* BACK */}
-          <div className="flip-back" style={{background:`linear-gradient(135deg,${u.color}22,${u.color}08)`,border:`1.5px solid ${u.color}66`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,boxShadow:`0 0 28px ${u.color}44`}}>
-            <div style={{fontSize:48,filter:`drop-shadow(0 0 14px ${u.color})`}}>{u.avatar}</div>
-            <div style={{fontSize:17,fontWeight:800,color:u.color}}>{u.name}</div>
-            <div style={{fontSize:11,color:T.inkMid,letterSpacing:1,textTransform:"uppercase"}}>{u.role}</div>
-            <button
-              onTouchEnd={e=>{e.preventDefault();e.stopPropagation();onLogin(u);}}
-              onClick={e=>{e.stopPropagation();onLogin(u);}}
-              style={{
-                marginTop:6,background:u.color,color:T.bgDeep,border:"none",
-                borderRadius:R.btn,padding:"12px 28px",fontWeight:800,fontSize:15,
-                cursor:"pointer",fontFamily:"inherit",
-                boxShadow:`0 0 18px ${u.color}88`,
-                WebkitTapHighlightColor:"transparent",
-                minHeight:48,width:"80%",
-              }}
-              onTouchStart={e=>e.currentTarget.style.opacity=".75"}
-              onTouchCancel={e=>e.currentTarget.style.opacity="1"}
-            >Ingresar</button>
-          </div>
-          {/* FRONT */}
-          <div className="flip-front" style={{background:T.bgCard,border:`1.5px solid ${T.border}`,boxShadow:"0 4px 24px #00000060"}}>
-            <div style={{position:"absolute",top:-40,left:-40,width:130,height:130,borderRadius:"50%",background:u.color+"18",filter:"blur(2px)"}}/>
-            <div style={{position:"absolute",top:-20,right:-30,width:90,height:90,borderRadius:"50%",background:u.color+"12",filter:"blur(4px)"}}/>
-            <div style={{position:"relative",zIndex:1,height:"100%",display:"flex",flexDirection:"column",justifyContent:"flex-end",padding:"16px 14px 18px"}}>
-              <div style={{position:"absolute",top:24,left:"50%",transform:"translateX(-50%)",fontSize:48,filter:`drop-shadow(0 0 8px ${u.color}66)`}}>{u.avatar}</div>
-              <div style={{marginBottom:8}}><span style={{background:u.color+"22",color:u.color,border:`1px solid ${u.color}44`,borderRadius:R.badge,padding:"3px 10px",fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>{u.role}</span></div>
-              <div style={{fontWeight:800,fontSize:18,color:T.inkBright,marginBottom:4}}>{u.name}</div>
-              <div style={{fontSize:11,color:T.inkMid}}>Tocá para ingresar 👆</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>;
-  })}
-</div>
-<div style={{color:T.inkLight,fontSize:12,marginTop:36,letterSpacing:1,textAlign:"center"}}>
-  Tocá tu perfil → luego "Ingresar"
-</div>
-```
-
-  </div>;
-}
-
-// ── MENU FORM ─────────────────────────────────────────────────────────────────
-function MenuForm({menu,setMenu}) {
+// ── MENU FORM ────────────────────────────────────────────────────────────────
+const MenuForm=({menu,setMenu})=>{
 const upd=(k,v)=>setMenu(m=>({…m,[k]:v}));
 const tm=menu.tipoMenu||””,esp=menu.especiales||{},beb=menu.bebidas||{};
 const togEsp=o=>{const n={…esp};if(n[o])delete n[o];else n[o]={activo:true,cantidad:””};upd(“especiales”,n);};
 const ub=(k,v)=>upd(“bebidas”,{…beb,[k]:v});
-return <div style={{display:“flex”,flexDirection:“column”,gap:8,marginTop:8}}>
-<SeccionBox title="🥂 Recepción" color={T.gold} defaultOpen>
-<Field label="Detalle"><Inp value={menu.recepcion||””} onChange={v=>upd(“recepcion”,v)} placeholder=“Ej: bocaditos, brindis…”/></Field>
-</SeccionBox>
-<SeccionBox title="🍽️ Tipo de menú" color={T.blue}>
-<Field label="Seleccioná" style={{marginBottom:8}}>
-<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
-{[{v:“Campestre”,c:T.green},{v:“Con platos”,c:T.blue}].map(o=><Chip key={o.v} label={o.v} selected={tm===o.v} color={o.c} onClick={()=>upd(“tipoMenu”,tm===o.v?””:o.v)}/>)}
-</div>
-</Field>
-{tm===“Campestre”&&<div style={{marginTop:12}}>
-<Divider label="Ítems campestre"/>
-{[“Entrada”,“Picada”,“Empanadas”,“Carnes”,“Ensalada”,“Papas fritas”].map(it=>(
-<div key={it} style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:R.field,padding:“12px 14px”,marginBottom:8,minHeight:52}}>
-<span style={{fontWeight:600,color:T.ink,fontSize:14}}>{it}</span>
-<div style={{display:“flex”,gap:8}}>{[“Sí”,“No”].map(op=><Chip key={op} small label={op} selected={(menu.campestre||{})[it]===op} color={op===“Sí”?T.green:T.red} onClick={()=>upd(“campestre”,{…(menu.campestre||{}),[it]:op})}/>)}</div>
-</div>
-))}
-<Field label="Postre">
-<div style={{display:“flex”,gap:8,flexWrap:“wrap”,marginTop:4}}>
-{CAMP_POSTRE.map(o=><Chip key={o} label={o} selected={(menu.campestre||{}).postre===o} color={T.gold} onClick={()=>upd(“campestre”,{…(menu.campestre||{}),postre:o})}/>)}
-</div>
-</Field>
-</div>}
-{tm===“Con platos”&&<div style={{marginTop:12}}>
-<Divider label="Primer plato — elegí uno"/>
-<div style={{display:“flex”,gap:8,flexWrap:“wrap”,marginBottom:12}}>
-{PRIMER_PLATO.map(o=><Chip key={o} label={o} selected={menu.primerPlato===o} color={T.blue} onClick={()=>upd(“primerPlato”,menu.primerPlato===o?””:o)}/>)}
-</div>
-<Divider label="Segundo plato"/>
-<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:R.field,padding:“12px 14px”,marginBottom:10,minHeight:52}}>
-<span style={{fontWeight:600,color:T.ink}}>🍗 Pollo</span><Tag color={T.green}>Siempre ✓</Tag>
-</div>
-<Field label="Otro" style={{marginBottom:12}}><Inp value={menu.segundoPlatoOtro||””} onChange={v=>upd(“segundoPlatoOtro”,v)} placeholder=“Ej: cerdo, vacío…”/></Field>
-<Divider label="Postre — elegí uno"/>
-<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
-{POSTRE.map(o=><Chip key={o} label={o} selected={menu.postre===o} color={T.gold} onClick={()=>upd(“postre”,menu.postre===o?””:o)}/>)}
-</div>
-</div>}
-</SeccionBox>
-<SeccionBox title="🌿 Menús especiales" color={T.green}>
-<div style={{display:“flex”,flexDirection:“column”,gap:8}}>
-{ESPECIALES.map(opt=>{
+
+const BevRow=({label,bkey})=>h(“div”,{style:{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgD,borderRadius:R.f,padding:“12px 14px”,minHeight:52}},
+h(“span”,{style:{fontWeight:600,color:T.ink}},label),
+h(“div”,{style:{display:“flex”,gap:8}},[“Sí”,“No”].map(op=>h(Chip,{key:op,small:true,label:op,selected:beb[bkey]===op,color:op===“Sí”?T.green:T.red,onClick:()=>ub(bkey,op)})))
+);
+
+return h(“div”,{style:{display:“flex”,flexDirection:“column”,gap:8,marginTop:8}},
+h(Accordion,{title:“🥂 Recepción”,color:T.gold,open:true},
+h(Field,{label:“Detalle”},h(Inp,{value:menu.recepcion||””,onChange:v=>upd(“recepcion”,v),placeholder:“Ej: bocaditos, brindis…”}))
+),
+h(Accordion,{title:“🍽️ Tipo de menú”,color:T.blue},
+h(Field,{label:“Seleccioná”,style:{marginBottom:8}},
+h(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”}},
+[{v:“Campestre”,c:T.green},{v:“Con platos”,c:T.blue}].map(o=>h(Chip,{key:o.v,label:o.v,selected:tm===o.v,color:o.c,onClick:()=>upd(“tipoMenu”,tm===o.v?””:o.v)}))
+)
+),
+tm===“Campestre”&&h(“div”,{style:{marginTop:12}},
+h(Divider,{label:“Ítems campestre”}),
+[“Entrada”,“Picada”,“Empanadas”,“Carnes”,“Ensalada”,“Papas fritas”].map(it=>
+h(“div”,{key:it,style:{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgD,borderRadius:R.f,padding:“12px 14px”,marginBottom:8,minHeight:52}},
+h(“span”,{style:{fontWeight:600,color:T.ink,fontSize:14}},it),
+h(“div”,{style:{display:“flex”,gap:8}},[“Sí”,“No”].map(op=>h(Chip,{key:op,small:true,label:op,selected:(menu.campestre||{})[it]===op,color:op===“Sí”?T.green:T.red,onClick:()=>upd(“campestre”,{…(menu.campestre||{}),[it]:op})})))
+)
+),
+h(Field,{label:“Postre”},
+h(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”,marginTop:4}},CP.map(o=>h(Chip,{key:o,label:o,selected:(menu.campestre||{}).postre===o,color:T.gold,onClick:()=>upd(“campestre”,{…(menu.campestre||{}),postre:o})})))
+)
+),
+tm===“Con platos”&&h(“div”,{style:{marginTop:12}},
+h(Divider,{label:“Primer plato — elegí uno”}),
+h(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”,marginBottom:12}},PP.map(o=>h(Chip,{key:o,label:o,selected:menu.primerPlato===o,color:T.blue,onClick:()=>upd(“primerPlato”,menu.primerPlato===o?””:o)}))),
+h(Divider,{label:“Segundo plato”}),
+h(“div”,{style:{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgD,borderRadius:R.f,padding:“12px 14px”,marginBottom:10,minHeight:52}},
+h(“span”,{style:{fontWeight:600,color:T.ink}},“🍗 Pollo”),h(Tag,{color:T.green},“Siempre ✓”)
+),
+h(Field,{label:“Otro”,style:{marginBottom:12}},h(Inp,{value:menu.segundoPlatoOtro||””,onChange:v=>upd(“segundoPlatoOtro”,v),placeholder:“Ej: cerdo, vacío…”})),
+h(Divider,{label:“Postre — elegí uno”}),
+h(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”}},PO.map(o=>h(Chip,{key:o,label:o,selected:menu.postre===o,color:T.gold,onClick:()=>upd(“postre”,menu.postre===o?””:o)})))
+)
+),
+h(Accordion,{title:“🌿 Menús especiales”,color:T.green},
+h(“div”,{style:{display:“flex”,flexDirection:“column”,gap:8}},
+EP.map(opt=>{
 const sel=!!esp[opt];
-return <div key={opt}>
-<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:sel?T.green+“12”:T.bgDeep,border:`1.5px solid ${sel?T.green+"44":T.border}`,borderRadius:sel?`${R.field}px ${R.field}px 0 0`:R.field,padding:“12px 14px”,minHeight:52}}>
-<span style={{fontWeight:600,color:sel?T.green:T.ink,fontSize:14}}>{opt}</span>
-<Chip small label={sel?“✓ Activo”:”+ Agregar”} selected={sel} color={T.green} onClick={()=>togEsp(opt)}/>
-</div>
-{sel&&<div style={{padding:“10px 14px”,background:T.green+“08”,border:`1px solid ${T.green}22`,borderTop:“none”,borderRadius:`0 0 ${R.field}px ${R.field}px`}}>
-<div style={{display:“grid”,gridTemplateColumns:opt===“Otro”?“1fr 90px”:“1fr”,gap:8}}>
-{opt===“Otro”&&<Inp value={esp[opt]?.descripcion||””} onChange={v=>upd(“especiales”,{…esp,[opt]:{…esp[opt],descripcion:v}})} placeholder=“Descripción…”/>}
-<Inp type=“number” value={esp[opt]?.cantidad||””} onChange={v=>upd(“especiales”,{…esp,[opt]:{…esp[opt],cantidad:v}})} placeholder=”¿Cuántas personas?”/>
-</div>
-</div>}
-</div>;
-})}
-</div>
-</SeccionBox>
-<SeccionBox title="☕ Sobremesa" color={T.gold}>
-<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
-{SOBREMESA.map(o=>{const sel=(menu.sobremesa||[]).includes(o);return<Chip key={o} label={o} selected={sel} color={T.gold} onClick={()=>{const c=menu.sobremesa||[];upd(“sobremesa”,sel?c.filter(s=>s!==o):[…c,o]);}}/>;})}
-</div>
-</SeccionBox>
-<SeccionBox title="🍷 Bebidas" color={T.violet}>
-<div style={{display:“flex”,flexDirection:“column”,gap:10}}>
-{[{k:“gaseosa”,l:“🥤 Gaseosa”},{k:“cervezaLibre”,l:“🍺 Cerveza libre”}].map(({k,l})=>(
-<div key={k} style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:R.field,padding:“12px 14px”,minHeight:52}}>
-<span style={{fontWeight:600,color:T.ink}}>{l}</span>
-<div style={{display:“flex”,gap:8}}>{[“Sí”,“No”].map(op=><Chip key={op} small label={op} selected={beb[k]===op} color={op===“Sí”?T.green:T.red} onClick={()=>ub(k,op)}/>)}</div>
-</div>
-))}
-<div>
-<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:beb.cervezaCajones===“Sí”?`${R.field}px ${R.field}px 0 0`:R.field,padding:“12px 14px”,minHeight:52}}>
-<span style={{fontWeight:600,color:T.ink}}>📦 Cerveza cajones</span>
-<div style={{display:“flex”,gap:8}}>{[“Sí”,“No”].map(op=><Chip key={op} small label={op} selected={beb.cervezaCajones===op} color={op===“Sí”?T.green:T.red} onClick={()=>ub(“cervezaCajones”,op)}/>)}</div>
-</div>
-{beb.cervezaCajones===“Sí”&&<div style={{padding:“12px 14px”,background:T.green+“08”,border:`1px solid ${T.green}22`,borderTop:“none”,borderRadius:`0 0 ${R.field}px ${R.field}px`,display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:10}}>
-<Field label="Cajones"><Inp type=“number” value={beb.cervezaCajonesCant||””} onChange={v=>ub(“cervezaCajonesCant”,v)} placeholder=“Ej: 3”/></Field>
-<Field label="Marca"><Inp value={beb.cervezaCajonesMarca||””} onChange={v=>ub(“cervezaCajonesMarca”,v)} placeholder=“Ej: Quilmes”/></Field>
-</div>}
-</div>
-<div>
-<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:beb.barraTragos===“Sí”?`${R.field}px ${R.field}px 0 0`:R.field,padding:“12px 14px”,minHeight:52}}>
-<span style={{fontWeight:600,color:T.ink}}>🍹 Barra de tragos</span>
-<div style={{display:“flex”,gap:8}}>{[“Sí”,“No”].map(op=><Chip key={op} small label={op} selected={beb.barraTragos===op} color={op===“Sí”?T.green:T.red} onClick={()=>ub(“barraTragos”,op)}/>)}</div>
-</div>
-{beb.barraTragos===“Sí”&&<div style={{padding:“12px 14px”,background:T.violet+“08”,border:`1px solid ${T.violet}22`,borderTop:“none”,borderRadius:`0 0 ${R.field}px ${R.field}px`}}>
-<Field label="Modalidad">
-<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
-{[“Barra libre”,“Por tandas”].map(op=><Chip key={op} label={op} selected={beb.barraModalidad===op} color={T.violet} onClick={()=>ub(“barraModalidad”,op)}/>)}
-</div>
-{beb.barraModalidad===“Por tandas”&&<Inp type=“number” value={beb.barraTandas||””} onChange={v=>ub(“barraTandas”,v)} placeholder=”¿Cuántas tandas?” style={{marginTop:8}}/>}
-</Field>
-</div>}
-</div>
-</div>
-</SeccionBox>
+return h(“div”,{key:opt},
+h(“div”,{style:{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:sel?T.green+“12”:T.bgD,border:`1.5px solid ${sel?T.green+"44":T.brd}`,borderRadius:sel?`${R.f}px ${R.f}px 0 0`:R.f,padding:“12px 14px”,minHeight:52}},
+h(“span”,{style:{fontWeight:600,color:sel?T.green:T.ink,fontSize:14}},opt),
+h(Chip,{small:true,label:sel?“✓ Activo”:”+ Agregar”,selected:sel,color:T.green,onClick:()=>togEsp(opt)})
+),
+sel&&h(“div”,{style:{padding:“10px 14px”,background:T.green+“08”,border:`1px solid ${T.green}22`,borderTop:“none”,borderRadius:`0 0 ${R.f}px ${R.f}px`}},
+h(“div”,{style:{display:“grid”,gridTemplateColumns:opt===“Otro”?“1fr 90px”:“1fr”,gap:8}},
+opt===“Otro”&&h(Inp,{value:esp[opt]?.descripcion||””,onChange:v=>upd(“especiales”,{…esp,[opt]:{…esp[opt],descripcion:v}}),placeholder:“Descripción…”}),
+h(Inp,{type:“number”,value:esp[opt]?.cantidad||””,onChange:v=>upd(“especiales”,{…esp,[opt]:{…esp[opt],cantidad:v}}),placeholder:”¿Cuántas personas?”})
+)
+)
+);
+})
+)
+),
+h(Accordion,{title:“☕ Sobremesa”,color:T.gold},
+h(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”}},
+SB.map(o=>{const sel=(menu.sobremesa||[]).includes(o);return h(Chip,{key:o,label:o,selected:sel,color:T.gold,onClick:()=>{const c=menu.sobremesa||[];upd(“sobremesa”,sel?c.filter(x=>x!==o):[…c,o]);}});})
+)
+),
+h(Accordion,{title:“🍷 Bebidas”,color:T.violet},
+h(“div”,{style:{display:“flex”,flexDirection:“column”,gap:10}},
+h(BevRow,{label:“🥤 Gaseosa”,bkey:“gaseosa”}),
+h(BevRow,{label:“🍺 Cerveza libre”,bkey:“cervezaLibre”}),
+h(“div”,null,
+h(“div”,{style:{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgD,borderRadius:beb.cervezaCajones===“Sí”?`${R.f}px ${R.f}px 0 0`:R.f,padding:“12px 14px”,minHeight:52}},
+h(“span”,{style:{fontWeight:600,color:T.ink}},“📦 Cerveza cajones”),
+h(“div”,{style:{display:“flex”,gap:8}},[“Sí”,“No”].map(op=>h(Chip,{key:op,small:true,label:op,selected:beb.cervezaCajones===op,color:op===“Sí”?T.green:T.red,onClick:()=>ub(“cervezaCajones”,op)})))
+),
+beb.cervezaCajones===“Sí”&&h(“div”,{style:{padding:“12px 14px”,background:T.green+“08”,border:`1px solid ${T.green}22`,borderTop:“none”,borderRadius:`0 0 ${R.f}px ${R.f}px`,display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:10}},
+h(Field,{label:“Cajones”},h(Inp,{type:“number”,value:beb.cervezaCajonesCant||””,onChange:v=>ub(“cervezaCajonesCant”,v),placeholder:“Ej: 3”})),
+h(Field,{label:“Marca”},h(Inp,{value:beb.cervezaCajonesMarca||””,onChange:v=>ub(“cervezaCajonesMarca”,v),placeholder:“Ej: Quilmes”}))
+)
+),
+h(“div”,null,
+h(“div”,{style:{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgD,borderRadius:beb.barraTragos===“Sí”?`${R.f}px ${R.f}px 0 0`:R.f,padding:“12px 14px”,minHeight:52}},
+h(“span”,{style:{fontWeight:600,color:T.ink}},“🍹 Barra de tragos”),
+h(“div”,{style:{display:“flex”,gap:8}},[“Sí”,“No”].map(op=>h(Chip,{key:op,small:true,label:op,selected:beb.barraTragos===op,color:op===“Sí”?T.green:T.red,onClick:()=>ub(“barraTragos”,op)})))
+),
+beb.barraTragos===“Sí”&&h(“div”,{style:{padding:“12px 14px”,background:T.violet+“08”,border:`1px solid ${T.violet}22`,borderTop:“none”,borderRadius:`0 0 ${R.f}px ${R.f}px`}},
+h(Field,{label:“Modalidad”},
+h(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”}},[“Barra libre”,“Por tandas”].map(op=>h(Chip,{key:op,label:op,selected:beb.barraModalidad===op,color:T.violet,onClick:()=>ub(“barraModalidad”,op)}))),
+beb.barraModalidad===“Por tandas”&&h(Inp,{type:“number”,value:beb.barraTandas||””,onChange:v=>ub(“barraTandas”,v),placeholder:”¿Cuántas tandas?”,style:{marginTop:8}})
+)
+)
+)
+)
+)
+);
+};
 
-  </div>;
-}
-
-// ── DASHBOARD ─────────────────────────────────────────────────────────────────
-function Dashboard({data,user}) {
+// ── DASHBOARD ────────────────────────────────────────────────────────────────
+const Dashboard=({data,user})=>{
 const hoy=new Date().toISOString().split(“T”)[0];
 const prox=data.eventos.filter(e=>e.fecha>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha));
-const bajo=STOCK_CATS.flatMap(c=>(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).map(s=>({…s,cl:c.label,cc:c.color})));
+const bajo=SC.flatMap(c=>(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).map(s=>({…s,cl:c.label,cc:c.color})));
 const fp=data.faltantes.filter(f=>!f.pedido);
 const fu=fp.filter(f=>f.urgencia===“alta”);
-return <div>
-<div style={{background:`linear-gradient(135deg,${user.color}18,${user.color}05)`,border:`1px solid ${user.color}30`,borderRadius:R.card,padding:“18px 20px”,marginBottom:20,display:“flex”,alignItems:“center”,gap:14}}>
-<div style={{fontSize:40,filter:`drop-shadow(0 0 10px ${user.color}88)`}}>{user.avatar}</div>
-<div>
-<div style={{fontSize:20,fontWeight:800,color:user.color}}>Hola, {user.name} 👋</div>
-<div style={{color:T.inkMid,fontSize:13,marginTop:2}}>{new Date().toLocaleDateString(“es-AR”,{weekday:“long”,day:“numeric”,month:“long”})}</div>
-</div>
-</div>
-<div style={{display:“grid”,gridTemplateColumns:“repeat(3,1fr)”,gap:10,marginBottom:20}}>
-{[
-{icon:“🎉”,n:prox.length,label:“Próximos”,sub:`${data.eventos.length} total`,color:T.blue,glow:T.blueGlow},
-{icon:“📦”,n:bajo.length,label:“Stock bajo”,sub:bajo.length===0?“OK ✓”:“Revisar”,color:bajo.length>0?T.red:T.green,glow:bajo.length>0?T.redGlow:T.greenGlow},
-{icon:“🛒”,n:fp.length,label:“Faltantes”,sub:fu.length>0?`${fu.length} urg.`:“Sin urg.”,color:fu.length>0?T.red:T.inkMid,glow:fu.length>0?T.redGlow:“none”},
-].map(s=><div key={s.label} style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:R.card,padding:“14px 12px”,boxShadow:`0 0 16px ${s.glow}`}}>
-<div style={{fontSize:20,marginBottom:4}}>{s.icon}</div>
-<div style={{fontSize:30,fontWeight:900,color:s.color,lineHeight:1,textShadow:`0 0 16px ${s.color}66`}}>{s.n}</div>
-<div style={{color:T.inkMid,fontSize:12,fontWeight:600,marginTop:4}}>{s.label}</div>
-<div style={{color:T.inkLight,fontSize:10,marginTop:2}}>{s.sub}</div>
-</div>)}
-</div>
-{prox.length>0&&<><Divider label="Próximos eventos"/>
-{prox.slice(0,3).map(e=>{
-const tipo=TIPO_EVENTO.find(t=>t.v===e.tipo);
+return h(“div”,null,
+h(“div”,{style:{background:`linear-gradient(135deg,${user.color}18,${user.color}05)`,border:`1px solid ${user.color}30`,borderRadius:R.c,padding:“16px 18px”,marginBottom:18,display:“flex”,alignItems:“center”,gap:14}},
+h(“div”,{style:{fontSize:38,filter:`drop-shadow(0 0 10px ${user.color}88)`}},user.avatar),
+h(“div”,null,
+h(“div”,{style:{fontSize:20,fontWeight:800,color:user.color}},`Hola, ${user.name} 👋`),
+h(“div”,{style:{color:T.inkM,fontSize:13,marginTop:2}},new Date().toLocaleDateString(“es-AR”,{weekday:“long”,day:“numeric”,month:“long”}))
+)
+),
+h(“div”,{style:{display:“grid”,gridTemplateColumns:“repeat(3,1fr)”,gap:10,marginBottom:18}},
+[
+{icon:“🎉”,n:prox.length,label:“Próximos”,sub:`${data.eventos.length} total`,color:T.blue,glow:T.blueG},
+{icon:“📦”,n:bajo.length,label:“Stock bajo”,sub:bajo.length===0?“OK ✓”:“Revisar”,color:bajo.length>0?T.red:T.green,glow:bajo.length>0?T.redG:T.greenG},
+{icon:“🛒”,n:fp.length,label:“Faltantes”,sub:fu.length>0?`${fu.length} urg.`:“OK”,color:fu.length>0?T.red:T.inkM,glow:fu.length>0?T.redG:“none”},
+].map(s=>h(“div”,{key:s.label,style:{background:T.bgC,border:`1px solid ${T.brd}`,borderRadius:R.c,padding:“12px 10px”,boxShadow:`0 0 14px ${s.glow}`}},
+h(“div”,{style:{fontSize:20,marginBottom:4}},s.icon),
+h(“div”,{style:{fontSize:28,fontWeight:900,color:s.color,lineHeight:1,textShadow:`0 0 14px ${s.color}66`}},s.n),
+h(“div”,{style:{color:T.inkM,fontSize:11,fontWeight:600,marginTop:4}},s.label),
+h(“div”,{style:{color:T.inkL,fontSize:10,marginTop:2}},s.sub)
+))
+),
+prox.length>0&&h(Fragment,null,
+h(Divider,{label:“Próximos eventos”}),
+prox.slice(0,3).map(e=>{
+const tipo=TE.find(t=>t.v===e.tipo);
 const dias=Math.ceil((new Date(e.fecha+“T12:00:00”)-new Date())/86400000);
-return <Card key={e.id} accent={tipo?.color||T.blue} style={{marginBottom:10}}>
-<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,flexWrap:“wrap”,gap:8}}>
-<div>
-<div style={{fontWeight:700,fontSize:15,color:T.inkBright,marginBottom:4}}>{e.cliente}</div>
-<div style={{display:“flex”,gap:6,flexWrap:“wrap”}}><Tag color={tipo?.color||T.blue}>{tipo?.l}</Tag>{e.invitados&&<Tag color={T.cyan}>👥 {e.invitados}</Tag>}</div>
-</div>
-<div style={{textAlign:“right”}}>
-<div style={{fontSize:17,fontWeight:700,color:T.blue}}>{new Date(e.fecha+“T12:00:00”).toLocaleDateString(“es-AR”,{day:“2-digit”,month:“short”})}</div>
-<div style={{color:dias<=3?T.red:T.inkLight,fontSize:12,fontWeight:dias<=3?700:400}}>{dias===0?”¡Hoy!”:dias===1?“Mañana”:`${dias}d`}</div>
-</div>
-</div>
-</Card>;
-})}
-</>}
-{bajo.length>0&&<><Divider label="⚠️ Stock bajo"/>
-{bajo.map((s,i)=><Card key={i} accent={T.red} style={{marginBottom:8}}>
-<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”}}>
-<div style={{display:“flex”,gap:8,alignItems:“center”}}><span style={{fontWeight:700,color:T.inkBright,fontSize:14}}>{s.nombre}</span><Tag color={s.cc}>{s.cl}</Tag></div>
-<span style={{color:T.red,fontWeight:800,fontSize:13}}>{s.cantidad}/{s.minimo} {s.unidad}</span>
-</div>
-</Card>)}
-</>}
-{data.eventos.length===0&&bajo.length===0&&fp.length===0&&<div style={{textAlign:“center”,paddingTop:60,color:T.inkLight}}>
-<div style={{fontSize:48,marginBottom:12}}>🎊</div>
-<div style={{fontSize:18,fontWeight:700,color:T.inkMid}}>¡Todo en orden!</div>
-<div style={{fontSize:13,marginTop:4}}>Empezá cargando eventos o stock.</div>
-</div>}
+return h(Card,{key:e.id,accent:tipo?.color||T.blue,style:{marginBottom:10}},
+h(“div”,{style:{display:“flex”,justifyContent:“space-between”,alignItems:“center”,flexWrap:“wrap”,gap:8}},
+h(“div”,null,
+h(“div”,{style:{fontWeight:700,fontSize:15,color:T.inkB,marginBottom:4}},e.cliente),
+h(“div”,{style:{display:“flex”,gap:6,flexWrap:“wrap”}},
+h(Tag,{color:tipo?.color||T.blue},tipo?.l),
+e.invitados&&h(Tag,{color:T.cyan},`👥 ${e.invitados}`)
+)
+),
+h(“div”,{style:{textAlign:“right”}},
+h(“div”,{style:{fontSize:16,fontWeight:700,color:T.blue}},new Date(e.fecha+“T12:00:00”).toLocaleDateString(“es-AR”,{day:“2-digit”,month:“short”})),
+h(“div”,{style:{color:dias<=3?T.red:T.inkL,fontSize:12,fontWeight:dias<=3?700:400}},dias===0?”¡Hoy!”:dias===1?“Mañana”:`${dias}d`)
+)
+)
+);
+})
+),
+bajo.length>0&&h(Fragment,null,
+h(Divider,{label:“⚠️ Stock bajo”}),
+bajo.map((s,i)=>h(Card,{key:i,accent:T.red,style:{marginBottom:8}},
+h(“div”,{style:{display:“flex”,justifyContent:“space-between”,alignItems:“center”}},
+h(“div”,{style:{display:“flex”,gap:8,alignItems:“center”}},
+h(“span”,{style:{fontWeight:700,color:T.inkB,fontSize:14}},s.nombre),
+h(Tag,{color:s.cc},s.cl)
+),
+h(“span”,{style:{color:T.red,fontWeight:800,fontSize:13}},`${s.cantidad}/${s.minimo} ${s.unidad}`)
+)
+))
+),
+data.eventos.length===0&&bajo.length===0&&fp.length===0&&h(“div”,{style:{textAlign:“center”,paddingTop:60,color:T.inkL}},
+h(“div”,{style:{fontSize:48,marginBottom:12}},“🎊”),
+h(“div”,{style:{fontSize:18,fontWeight:700,color:T.inkM}},”¡Todo en orden!”),
+h(“div”,{style:{fontSize:13,marginTop:4}},“Empezá cargando eventos o stock.”)
+)
+);
+};
 
-  </div>;
-}
-
-// ── EVENTOS ───────────────────────────────────────────────────────────────────
-function Eventos({data,setData,user}) {
+// ── EVENTOS ──────────────────────────────────────────────────────────────────
+const Eventos=({data,setData,user})=>{
 const ef={cliente:””,telefono:””,fecha:””,tipo:””,invitados:””,notas:””};
 const [sf,setSf]=useState(false);
 const [form,setForm]=useState(ef);
@@ -619,169 +444,173 @@ setData(d=>({…d,eventos:[…d.eventos,{…form,id:Date.now(),creadoPor:user.na
 setForm(ef);setMf({});setSf(false);
 };
 const saveM=id=>{setData(d=>({…d,eventos:d.eventos.map(e=>e.id===id?{…e,menu:emD}:e)}));setEmId(null);};
-const prox=data.eventos.filter(e=>e.fecha>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha));
-const pas=data.eventos.filter(e=>e.fecha<hoy).sort((a,b)=>b.fecha.localeCompare(a.fecha));
 
 const ResM=({menu})=>{
-if(!menu||!Object.keys(menu).length)return<span style={{color:T.inkLight,fontSize:12}}>Sin menú</span>;
+if(!menu||!Object.keys(menu).length)return h(“span”,{style:{color:T.inkL,fontSize:12}},“Sin menú”);
 const it=[];
 if(menu.tipoMenu)it.push(menu.tipoMenu);
 if(menu.primerPlato)it.push(menu.primerPlato);
 if(menu.postre)it.push(menu.postre);
 const ne=Object.keys(menu.especiales||{}).length;
 if(ne>0)it.push(`${ne} esp.`);
-return<span style={{color:T.inkMid,fontSize:12}}>{it.join(” · “)}</span>;
+return h(“span”,{style:{color:T.inkM,fontSize:12}},it.join(” · “));
 };
+
+const prox=data.eventos.filter(e=>e.fecha>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+const pas=data.eventos.filter(e=>e.fecha<hoy).sort((a,b)=>b.fecha.localeCompare(a.fecha));
 
 const EC=({ev,past})=>{
-const tipo=TIPO_EVENTO.find(t=>t.v===ev.tipo);
+const tipo=TE.find(t=>t.v===ev.tipo);
 const isEM=emId===ev.id;
-return<Card accent={past?T.border:(tipo?.color||T.blue)} style={{marginBottom:12}}>
-<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“flex-start”,gap:10}}>
-<div style={{flex:1,minWidth:0}}>
-<div style={{display:“flex”,gap:8,alignItems:“center”,marginBottom:6,flexWrap:“wrap”}}>
-<span style={{fontWeight:700,fontSize:16,color:T.inkBright}}>{ev.cliente}</span>
-{tipo&&<Tag color={past?T.inkLight:tipo.color}>{tipo.l}</Tag>}
-{past&&<Tag color={T.inkLight}>Realizado</Tag>}
-</div>
-<div style={{display:“flex”,gap:12,flexWrap:“wrap”,color:T.inkMid,fontSize:13}}>
-<span>📅 {new Date(ev.fecha+“T12:00:00”).toLocaleDateString(“es-AR”,{day:“2-digit”,month:“long”,year:“numeric”})}</span>
-{ev.invitados&&<span>👥 {ev.invitados}</span>}
-</div>
-{ev.telefono&&<div style={{color:T.inkMid,fontSize:13,marginTop:2}}>📞 {ev.telefono}</div>}
-<div style={{marginTop:6}}><ResM menu={ev.menu}/></div>
-{ev.creadoPor&&<div style={{color:T.inkLight,fontSize:11,marginTop:4}}>Por {ev.creadoPor}</div>}
-</div>
-<div style={{display:“flex”,gap:8,alignItems:“center”,flexShrink:0}}>
-<Btn small variant=“outline” onClick={()=>{if(isEM){setEmId(null);return;}setEmId(ev.id);setEmD(ev.menu||{});}}>{isEM?“✕”:“🍽️”}</Btn>
-<TrashBtn onClick={()=>trash(ev)}/>
-</div>
-</div>
-{isEM&&<div style={{marginTop:14,borderTop:`1px solid ${T.border}`,paddingTop:14}}>
-<MenuForm menu={emD} setMenu={setEmD}/>
-<div style={{marginTop:14}}><Btn onClick={()=>saveM(ev.id)} full>💾 Guardar menú</Btn></div>
-</div>}
-</Card>;
+return h(Card,{accent:past?T.brd:(tipo?.color||T.blue),style:{marginBottom:12}},
+h(“div”,{style:{display:“flex”,justifyContent:“space-between”,alignItems:“flex-start”,gap:10}},
+h(“div”,{style:{flex:1,minWidth:0}},
+h(“div”,{style:{display:“flex”,gap:8,alignItems:“center”,marginBottom:6,flexWrap:“wrap”}},
+h(“span”,{style:{fontWeight:700,fontSize:16,color:T.inkB}},ev.cliente),
+tipo&&h(Tag,{color:past?T.inkL:tipo.color},tipo.l),
+past&&h(Tag,{color:T.inkL},“Realizado”)
+),
+h(“div”,{style:{display:“flex”,gap:10,flexWrap:“wrap”,color:T.inkM,fontSize:13}},
+h(“span”,null,`📅 ${new Date(ev.fecha+"T12:00:00").toLocaleDateString("es-AR",{day:"2-digit",month:"long",year:"numeric"})}`),
+ev.invitados&&h(“span”,null,`👥 ${ev.invitados}`)
+),
+ev.telefono&&h(“div”,{style:{color:T.inkM,fontSize:13,marginTop:2}},`📞 ${ev.telefono}`),
+h(“div”,{style:{marginTop:6}},h(ResM,{menu:ev.menu})),
+ev.creadoPor&&h(“div”,{style:{color:T.inkL,fontSize:11,marginTop:4}},`Por ${ev.creadoPor}`)
+),
+h(“div”,{style:{display:“flex”,gap:8,alignItems:“center”,flexShrink:0}},
+h(Btn,{small:true,variant:“outline”,onClick:()=>{if(isEM){setEmId(null);return;}setEmId(ev.id);setEmD(ev.menu||{});}},isEM?“✕”:“🍽️”),
+h(Trash,{onClick:()=>trash(ev)})
+)
+),
+isEM&&h(“div”,{style:{marginTop:14,borderTop:`1px solid ${T.brd}`,paddingTop:14}},
+h(MenuForm,{menu:emD,setMenu:setEmD}),
+h(“div”,{style:{marginTop:14}},h(Btn,{full:true,onClick:()=>saveM(ev.id)},“💾 Guardar menú”))
+)
+);
 };
 
-return<div>
-<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:18}}>
-<div style={{fontSize:20,fontWeight:800,color:T.inkBright}}>🎉 Eventos</div>
-<Btn onClick={()=>{setSf(!sf);setForm(ef);setMf({});}}>{sf?“Cancelar”:”+ Nuevo”}</Btn>
-</div>
-{sf&&<Card style={{borderColor:T.blue+“44”,marginBottom:20}} glow={T.blueGlow}>
-<div style={{fontWeight:800,color:T.blue,marginBottom:14,fontSize:15}}>Nuevo evento</div>
-<Field label="Tipo de evento *" style={{marginBottom:14}}>
-<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
-{TIPO_EVENTO.map(t=><Chip key={t.v} label={t.l} selected={form.tipo===t.v} color={t.color} onClick={()=>setForm(f=>({…f,tipo:f.tipo===t.v?””:t.v}))}/>)}
-</div>
-</Field>
-<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}}>
-<Field label="Cliente *"><Inp value={form.cliente} onChange={v=>setForm(f=>({…f,cliente:v}))} placeholder=“Nombre”/></Field>
-<Field label="Teléfono"><Inp value={form.telefono} onChange={v=>setForm(f=>({…f,telefono:v}))} placeholder=“Teléfono”/></Field>
-</div>
-<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}}>
-<Field label="Fecha *"><Inp type=“date” value={form.fecha} onChange={v=>setForm(f=>({…f,fecha:v}))}/></Field>
-<Field label="Invitados"><Inp type=“number” value={form.invitados} onChange={v=>setForm(f=>({…f,invitados:v}))} placeholder=“Ej: 200”/></Field>
-</div>
-<Field label="Notas" style={{marginBottom:14}}><Inp value={form.notas} onChange={v=>setForm(f=>({…f,notas:v}))} placeholder=“Observaciones…”/></Field>
-<Divider label="Menú del evento"/>
-<MenuForm menu={mf} setMenu={setMf}/>
-<div style={{marginTop:14}}>
-<Btn full onClick={guardar} style={{opacity:(!form.cliente||!form.fecha||!form.tipo)?.5:1}}>Guardar evento</Btn>
-</div>
-</Card>}
-{prox.length>0&&<><Divider label="Próximos"/>{prox.map(e=><EC key={e.id} ev={e}/>)}</>}
-{pas.length>0&&<><Divider label="Realizados"/>{pas.map(e=><EC key={e.id} ev={e} past/>)}</>}
-{data.eventos.length===0&&<div style={{textAlign:“center”,paddingTop:60,color:T.inkLight}}><div style={{fontSize:44,marginBottom:12}}>🎉</div><div style={{fontSize:18,fontWeight:700,color:T.inkMid}}>No hay eventos aún.</div></div>}
+return h(“div”,null,
+h(“div”,{style:{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:16}},
+h(“div”,{style:{fontSize:20,fontWeight:800,color:T.inkB}},“🎉 Eventos”),
+h(Btn,{onClick:()=>{setSf(!sf);setForm(ef);setMf({});}},sf?“Cancelar”:”+ Nuevo”)
+),
+sf&&h(Card,{style:{borderColor:T.blue+“44”,marginBottom:18},glow:T.blueG},
+h(“div”,{style:{fontWeight:800,color:T.blue,marginBottom:14,fontSize:15}},“Nuevo evento”),
+h(Field,{label:“Tipo de evento *”,style:{marginBottom:14}},
+h(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”}},
+TE.map(t=>h(Chip,{key:t.v,label:t.l,selected:form.tipo===t.v,color:t.color,onClick:()=>setForm(f=>({…f,tipo:f.tipo===t.v?””:t.v}))}))
+)
+),
+h(“div”,{style:{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}},
+h(Field,{label:“Cliente *”},h(Inp,{value:form.cliente,onChange:v=>setForm(f=>({…f,cliente:v})),placeholder:“Nombre”})),
+h(Field,{label:“Teléfono”},h(Inp,{value:form.telefono,onChange:v=>setForm(f=>({…f,telefono:v})),placeholder:“Teléfono”}))
+),
+h(“div”,{style:{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}},
+h(Field,{label:“Fecha *”},h(Inp,{type:“date”,value:form.fecha,onChange:v=>setForm(f=>({…f,fecha:v}))})),
+h(Field,{label:“Invitados”},h(Inp,{type:“number”,value:form.invitados,onChange:v=>setForm(f=>({…f,invitados:v})),placeholder:“Ej: 200”}))
+),
+h(Field,{label:“Notas”,style:{marginBottom:14}},h(Inp,{value:form.notas,onChange:v=>setForm(f=>({…f,notas:v})),placeholder:“Observaciones…”})),
+h(Divider,{label:“Menú del evento”}),
+h(MenuForm,{menu:mf,setMenu:setMf}),
+h(“div”,{style:{marginTop:14}},h(Btn,{full:true,onClick:guardar,style:{opacity:(!form.cliente||!form.fecha||!form.tipo)?.5:1}},“Guardar evento”))
+),
+prox.length>0&&h(Fragment,null,h(Divider,{label:“Próximos”}),prox.map(e=>h(EC,{key:e.id,ev:e}))),
+pas.length>0&&h(Fragment,null,h(Divider,{label:“Realizados”}),pas.map(e=>h(EC,{key:e.id,ev:e,past:true}))),
+data.eventos.length===0&&h(“div”,{style:{textAlign:“center”,paddingTop:60,color:T.inkL}},
+h(“div”,{style:{fontSize:44,marginBottom:12}},“🎉”),
+h(“div”,{style:{fontSize:18,fontWeight:700,color:T.inkM}},“No hay eventos aún.”)
+)
+);
+};
 
-  </div>;
-}
-
-// ── STOCK ─────────────────────────────────────────────────────────────────────
-function Stock({data,setData,user}) {
+// ── STOCK ────────────────────────────────────────────────────────────────────
+const Stock=({data,setData,user})=>{
 const [cat,setCat]=useState(“cocina”);
 const [sf,setSf]=useState(false);
 const [form,setForm]=useState({nombre:””,cantidad:””,unidad:“unidades”,minimo:””});
 const [eid,setEid]=useState(null);
 const [bus,setBus]=useState(””);
-const ci=STOCK_CATS.find(c=>c.id===cat);
+const ci=SC.find(c=>c.id===cat);
 const items=(data.stock[cat]||[]).filter(s=>s.nombre.toLowerCase().includes(bus.toLowerCase()));
 
 const trash=item=>setData(d=>({…d,stock:{…d.stock,[cat]:d.stock[cat].filter(s=>s.id!==item.id)},papelera:[…(d.papelera||[]),{item:{…item,_cat:cat},tipo:“stock”,eliminadoPor:user.name,fechaEliminacion:Date.now()}]}));
 const guardar=()=>{
 if(!form.nombre||!form.cantidad)return;
 if(eid){setData(d=>({…d,stock:{…d.stock,[cat]:d.stock[cat].map(s=>s.id===eid?{…form,id:eid}:s)}}));setEid(null);}
-else{setData(d=>({…d,stock:{…d.stock,[cat]:[…(d.stock[cat]||[]),{…form,id:Date.now(),cargadoPor:user.name}]}}));}
+else setData(d=>({…d,stock:{…d.stock,[cat]:[…(d.stock[cat]||[]),{…form,id:Date.now(),cargadoPor:user.name}]}}));
 setForm({nombre:””,cantidad:””,unidad:“unidades”,minimo:””});setSf(false);
 };
 const editar=i=>{setForm(i);setEid(i.id);setSf(true);};
-const aj=(id,d)=>setData(dd=>({…dd,stock:{…dd.stock,[cat]:dd.stock[cat].map(s=>s.id===id?{…s,cantidad:String(Math.max(0,Number(s.cantidad)+d))}:s)}}));
+const aj=(id,dd)=>setData(d=>({…d,stock:{…d.stock,[cat]:d.stock[cat].map(s=>s.id===id?{…s,cantidad:String(Math.max(0,Number(s.cantidad)+dd))}:s)}}));
 
-return<div>
-<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:18}}>
-<div style={{fontSize:20,fontWeight:800,color:T.inkBright}}>📦 Stock</div>
-<Btn onClick={()=>{setSf(!sf);setEid(null);setForm({nombre:””,cantidad:””,unidad:“unidades”,minimo:””});}}>{sf&&!eid?“Cancelar”:”+ Agregar”}</Btn>
-</div>
-<div style={{display:“grid”,gridTemplateColumns:“repeat(2,1fr)”,gap:10,marginBottom:18}}>
-{STOCK_CATS.map(c=>{
+return h(“div”,null,
+h(“div”,{style:{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:16}},
+h(“div”,{style:{fontSize:20,fontWeight:800,color:T.inkB}},“📦 Stock”),
+h(Btn,{onClick:()=>{setSf(!sf);setEid(null);setForm({nombre:””,cantidad:””,unidad:“unidades”,minimo:””});}},sf&&!eid?“Cancelar”:”+ Agregar”)
+),
+h(“div”,{style:{display:“grid”,gridTemplateColumns:“repeat(2,1fr)”,gap:10,marginBottom:16}},
+SC.map(c=>{
 const b=(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).length;
 const sel=cat===c.id;
-return<button key={c.id}
-onTouchEnd={e=>{e.preventDefault();setCat(c.id);setSf(false);setBus(””);}}
-onClick={()=>{setCat(c.id);setSf(false);setBus(””);}}
-style={{background:sel?c.color+“22”:T.bgCard,color:sel?c.color:T.inkMid,border:`1.5px solid ${sel?c.color:T.border}`,borderRadius:R.card,padding:“14px 12px”,fontWeight:700,fontSize:14,cursor:“pointer”,position:“relative”,transition:“all .2s”,boxShadow:sel?`0 0 18px ${c.color}33`:“none”,fontFamily:“inherit”,minHeight:70,WebkitTapHighlightColor:“transparent”}}>
-<div style={{fontSize:20,marginBottom:4}}>{c.label.split(” “)[0]}</div>
-<div style={{fontSize:13}}>{c.label.split(” “).slice(1).join(” “)}</div>
-<div style={{fontSize:10,marginTop:3,opacity:.7}}>{(data.stock[c.id]||[]).length} prod.</div>
-{b>0&&<span style={{position:“absolute”,top:-6,right:-6,background:T.red,color:”#fff”,borderRadius:R.badge,width:20,height:20,fontSize:10,fontWeight:900,display:“flex”,alignItems:“center”,justifyContent:“center”}}>{b}</span>}
-</button>;
-})}
-</div>
-{sf&&<Card style={{borderColor:ci.color+“44”,marginBottom:18}} glow={ci.color+“22”}>
-<div style={{fontWeight:800,color:ci.color,marginBottom:12}}>{eid?“Editar”:`Nuevo — ${ci.label}`}</div>
-<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}}>
-<Field label="Producto *"><Inp value={form.nombre} onChange={v=>setForm(f=>({…f,nombre:v}))} placeholder=“Nombre”/></Field>
-<Field label="Unidad"><Sel value={form.unidad} onChange={v=>setForm(f=>({…f,unidad:v}))} options={[{v:“unidades”,l:“Unidades”},{v:“kg”,l:“Kg”},{v:“litros”,l:“Litros”},{v:“cajas”,l:“Cajas”},{v:“paquetes”,l:“Paquetes”}]}/></Field>
-</div>
-<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:14}}>
-<Field label="Cantidad *"><Inp type=“number” value={form.cantidad} onChange={v=>setForm(f=>({…f,cantidad:v}))} placeholder=“Ej: 24”/></Field>
-<Field label="Mínimo alerta"><Inp type=“number” value={form.minimo} onChange={v=>setForm(f=>({…f,minimo:v}))} placeholder=“Ej: 5”/></Field>
-</div>
-<div style={{display:“flex”,gap:8}}>
-<Btn onClick={guardar}>{eid?“Actualizar”:“Guardar”}</Btn>
-{eid&&<Btn variant=“ghost” onClick={()=>{setSf(false);setEid(null);}}>Cancelar</Btn>}
-</div>
-</Card>}
-<Inp value={bus} onChange={setBus} placeholder={`🔍 Buscar en ${ci.label}...`} style={{marginBottom:12}}/>
-{items.length===0?<div style={{textAlign:“center”,paddingTop:50,color:T.inkLight}}><div style={{fontSize:36,marginBottom:10}}>📦</div>{(data.stock[cat]||[]).length===0?“No hay productos.”:“No se encontraron.”}</div>
-:<div style={{display:“grid”,gap:10}}>
-{items.map(item=>{
+return h(“button”,{key:c.id,
+onTouchEnd:e=>{e.preventDefault();setCat(c.id);setSf(false);setBus(””);},
+onClick:()=>{setCat(c.id);setSf(false);setBus(””);},
+style:{background:sel?c.color+“22”:T.bgC,color:sel?c.color:T.inkM,border:`1.5px solid ${sel?c.color:T.brd}`,borderRadius:R.c,padding:“14px 10px”,fontWeight:700,fontSize:14,cursor:“pointer”,position:“relative”,transition:“all .2s”,boxShadow:sel?`0 0 18px ${c.color}33`:“none”,fontFamily:“inherit”,minHeight:70,WebkitTapHighlightColor:“transparent”,textAlign:“center”}},
+h(“div”,{style:{fontSize:20,marginBottom:4}},c.label.split(” “)[0]),
+h(“div”,{style:{fontSize:13}},c.label.split(” “).slice(1).join(” “)),
+h(“div”,{style:{fontSize:10,marginTop:3,opacity:.7}},`${(data.stock[c.id]||[]).length} prod.`),
+b>0&&h(“span”,{style:{position:“absolute”,top:-6,right:-6,background:T.red,color:”#fff”,borderRadius:R.ba,width:20,height:20,fontSize:10,fontWeight:900,display:“flex”,alignItems:“center”,justifyContent:“center”}},b)
+);
+})
+),
+sf&&h(Card,{style:{borderColor:ci.color+“44”,marginBottom:16},glow:ci.color+“22”},
+h(“div”,{style:{fontWeight:800,color:ci.color,marginBottom:12}},eid?“Editar”:`Nuevo — ${ci.label}`),
+h(“div”,{style:{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}},
+h(Field,{label:“Producto *”},h(Inp,{value:form.nombre,onChange:v=>setForm(f=>({…f,nombre:v})),placeholder:“Nombre”})),
+h(Field,{label:“Unidad”},h(Sel,{value:form.unidad,onChange:v=>setForm(f=>({…f,unidad:v})),options:[{v:“unidades”,l:“Unidades”},{v:“kg”,l:“Kg”},{v:“litros”,l:“Litros”},{v:“cajas”,l:“Cajas”},{v:“paquetes”,l:“Paquetes”}]}))
+),
+h(“div”,{style:{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:14}},
+h(Field,{label:“Cantidad *”},h(Inp,{type:“number”,value:form.cantidad,onChange:v=>setForm(f=>({…f,cantidad:v})),placeholder:“Ej: 24”})),
+h(Field,{label:“Mínimo”},h(Inp,{type:“number”,value:form.minimo,onChange:v=>setForm(f=>({…f,minimo:v})),placeholder:“Ej: 5”}))
+),
+h(“div”,{style:{display:“flex”,gap:8}},
+h(Btn,{onClick:guardar},eid?“Actualizar”:“Guardar”),
+eid&&h(Btn,{variant:“ghost”,onClick:()=>{setSf(false);setEid(null);}},“Cancelar”)
+)
+),
+h(Inp,{value:bus,onChange:setBus,placeholder:`🔍 Buscar en ${ci.label}...`,style:{marginBottom:12}}),
+items.length===0
+?h(“div”,{style:{textAlign:“center”,paddingTop:50,color:T.inkL}},h(“div”,{style:{fontSize:36,marginBottom:10}},“📦”),(data.stock[cat]||[]).length===0?“No hay productos.”:“No se encontraron.”)
+:h(“div”,{style:{display:“grid”,gap:10}},
+items.map(item=>{
 const cr=item.minimo&&Number(item.cantidad)<=Number(item.minimo);
-return<div key={item.id} style={{background:T.bgCard,borderRadius:R.card,padding:“14px 16px”,border:`1px solid ${cr?T.red+"66":T.border}`,borderLeft:`3px solid ${cr?T.red:ci.color}`,display:“flex”,justifyContent:“space-between”,alignItems:“center”,gap:10,boxShadow:cr?`0 0 10px ${T.redGlow}`:“none”}}>
-<div style={{flex:1,minWidth:0}}>
-<div style={{display:“flex”,gap:8,alignItems:“center”,marginBottom:4,flexWrap:“wrap”}}><span style={{fontWeight:700,fontSize:14,color:T.inkBright}}>{item.nombre}</span>{cr&&<Tag color={T.red}>⚠️ Bajo</Tag>}</div>
-{item.minimo&&<div style={{color:T.inkLight,fontSize:11}}>Mín: {item.minimo} {item.unidad}</div>}
-</div>
-<div style={{display:“flex”,alignItems:“center”,gap:8,flexShrink:0}}>
-<div style={{display:“flex”,alignItems:“center”,gap:8,background:T.bgDeep,borderRadius:R.field,padding:“8px 12px”,border:`1px solid ${T.border}`}}>
-<button onTouchEnd={e=>{e.preventDefault();aj(item.id,-1);}} onClick={()=>aj(item.id,-1)} style={{background:“none”,border:“none”,color:T.red,cursor:“pointer”,fontSize:24,fontWeight:900,padding:0,lineHeight:1,minHeight:44,minWidth:32,WebkitTapHighlightColor:“transparent”}}>−</button>
-<span style={{fontWeight:900,fontSize:18,color:cr?T.red:ci.color,minWidth:28,textAlign:“center”}}>{item.cantidad}</span>
-<span style={{color:T.inkLight,fontSize:10}}>{item.unidad}</span>
-<button onTouchEnd={e=>{e.preventDefault();aj(item.id,1);}} onClick={()=>aj(item.id,1)} style={{background:“none”,border:“none”,color:T.green,cursor:“pointer”,fontSize:24,fontWeight:900,padding:0,lineHeight:1,minHeight:44,minWidth:32,WebkitTapHighlightColor:“transparent”}}>+</button>
-</div>
-<button onTouchEnd={e=>{e.preventDefault();editar(item);}} onClick={()=>editar(item)} style={{background:“none”,border:“none”,color:T.inkLight,cursor:“pointer”,fontSize:18,minHeight:44,minWidth:36,WebkitTapHighlightColor:“transparent”}}>✏️</button>
-<TrashBtn onClick={()=>trash(item)}/>
-</div>
-</div>;
-})}
-</div>}
+return h(“div”,{key:item.id,style:{background:T.bgC,borderRadius:R.c,padding:“14px 14px”,border:`1px solid ${cr?T.red+"66":T.brd}`,borderLeft:`3px solid ${cr?T.red:ci.color}`,display:“flex”,justifyContent:“space-between”,alignItems:“center”,gap:10,boxShadow:cr?`0 0 10px ${T.redG}`:“none”}},
+h(“div”,{style:{flex:1,minWidth:0}},
+h(“div”,{style:{display:“flex”,gap:8,alignItems:“center”,marginBottom:4,flexWrap:“wrap”}},
+h(“span”,{style:{fontWeight:700,fontSize:14,color:T.inkB}},item.nombre),
+cr&&h(Tag,{color:T.red},“⚠️ Bajo”)
+),
+item.minimo&&h(“div”,{style:{color:T.inkL,fontSize:11}},`Mín: ${item.minimo} ${item.unidad}`)
+),
+h(“div”,{style:{display:“flex”,alignItems:“center”,gap:8,flexShrink:0}},
+h(“div”,{style:{display:“flex”,alignItems:“center”,gap:6,background:T.bgD,borderRadius:R.f,padding:“6px 10px”,border:`1px solid ${T.brd}`}},
+h(“button”,{onTouchEnd:e=>{e.preventDefault();aj(item.id,-1);},onClick:()=>aj(item.id,-1),style:{background:“none”,border:“none”,color:T.red,cursor:“pointer”,fontSize:26,fontWeight:900,padding:0,lineHeight:1,minHeight:44,minWidth:34,WebkitTapHighlightColor:“transparent”}},“−”),
+h(“span”,{style:{fontWeight:900,fontSize:18,color:cr?T.red:ci.color,minWidth:28,textAlign:“center”}},item.cantidad),
+h(“span”,{style:{color:T.inkL,fontSize:10}},item.unidad),
+h(“button”,{onTouchEnd:e=>{e.preventDefault();aj(item.id,1);},onClick:()=>aj(item.id,1),style:{background:“none”,border:“none”,color:T.green,cursor:“pointer”,fontSize:26,fontWeight:900,padding:0,lineHeight:1,minHeight:44,minWidth:34,WebkitTapHighlightColor:“transparent”}},”+”)
+),
+h(“button”,{onTouchEnd:e=>{e.preventDefault();editar(item);},onClick:()=>editar(item),style:{background:“none”,border:“none”,color:T.inkL,cursor:“pointer”,fontSize:18,minHeight:44,minWidth:36,WebkitTapHighlightColor:“transparent”}},“✏️”),
+h(Trash,{onClick:()=>trash(item)})
+)
+);
+})
+)
+);
+};
 
-  </div>;
-}
-
-// ── FALTANTES ─────────────────────────────────────────────────────────────────
-function Faltantes({data,setData,user}) {
+// ── FALTANTES ────────────────────────────────────────────────────────────────
+const Faltantes=({data,setData,user})=>{
 const [sf,setSf]=useState(false);
 const [va,setVa]=useState(false);
 const [form,setForm]=useState({nombre:””,cantidad:””,unidad:“unidades”,urgencia:“media”,seccion:“cocina”,notas:””});
@@ -797,125 +626,121 @@ const limpiar=()=>setData(d=>({…d,faltantes:d.faltantes.filter(f=>!f.pedido)})
 
 const pend=data.faltantes.filter(f=>!f.pedido).sort((a,b)=>({alta:0,media:1,baja:2}[a.urgencia]-{alta:0,media:1,baja:2}[b.urgencia]));
 const ped=data.faltantes.filter(f=>f.pedido);
-const uc=u=>({alta:T.red,media:T.gold,baja:T.green}[u]||T.inkMid);
+const uc=u=>({alta:T.red,media:T.gold,baja:T.green}[u]||T.inkM);
 
-return<div>
-<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:18}}>
-<div>
-<div style={{fontSize:20,fontWeight:800,color:T.inkBright}}>🛒 Faltantes</div>
-<div style={{color:T.inkLight,fontSize:12,marginTop:2}}>{pend.length} pendiente{pend.length!==1?“s”:””} · {ped.length} pedido{ped.length!==1?“s”:””}</div>
-</div>
-<div style={{display:“flex”,gap:8}}>
-{ped.length>0&&<Btn small variant=“outline” onClick={()=>setVa(v=>!v)}>{va?“← Volver”:“📁”}{!va&&ped.length>0&&<span style={{background:T.green,color:T.bgDeep,borderRadius:R.badge,padding:“1px 6px”,fontSize:10,fontWeight:900,marginLeft:4}}>{ped.length}</span>}</Btn>}
-{!va&&<Btn onClick={()=>setSf(!sf)}>{sf?“Cancelar”:”+ Agregar”}</Btn>}
-</div>
-</div>
-{va?(
-<div>
-<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:14}}>
-<span style={{fontWeight:700,color:T.green,fontSize:15}}>📁 Pedidos realizados</span>
-{ped.length>0&&<Btn small variant="danger" onClick={limpiar}>🗑️ Limpiar</Btn>}
-</div>
-{ped.length===0?<div style={{textAlign:“center”,paddingTop:40,color:T.inkLight}}><div style={{fontSize:36,marginBottom:10}}>📂</div>No hay pedidos.</div>
-:<div style={{display:“grid”,gap:8}}>
-{ped.map(item=>{
-const ug=URGENCIAS.find(u=>u.v===item.urgencia);
-const sc=STOCK_CATS.find(c=>c.id===item.seccion);
-return<div key={item.id} style={{background:T.bgCard,border:`1px solid ${T.green}33`,borderLeft:`3px solid ${T.green}`,borderRadius:R.card,padding:“12px 14px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,gap:8,flexWrap:“wrap”}}>
-<div style={{flex:1,minWidth:0}}>
-<div style={{display:“flex”,gap:8,alignItems:“center”,marginBottom:4,flexWrap:“wrap”}}>
-<span style={{color:T.green}}>✓</span>
-<span style={{fontWeight:700,fontSize:14,color:T.inkMid,textDecoration:“line-through”}}>{item.nombre}</span>
-{ug&&<Tag color={ug.color}>{ug.l}</Tag>}
-{sc&&<Tag color={sc.color}>{sc.label}</Tag>}
-</div>
-<div style={{color:T.inkLight,fontSize:12}}>{item.pedidoPor&&`Por ${item.pedidoPor}`}{item.fechaPedido&&` · ${item.fechaPedido}`}</div>
-</div>
-<div style={{display:“flex”,gap:8,alignItems:“center”}}>
-<Btn small variant=“ghost” onClick={()=>togPed(item.id)}>↩</Btn>
-<TrashBtn onClick={()=>trash(item)}/>
-</div>
-</div>;
-})}
-</div>}
-</div>
-):(
-<>
-{sf&&<Card style={{borderColor:T.red+“44”,marginBottom:20}} glow={T.redGlow}>
-<div style={{fontWeight:800,color:T.red,marginBottom:14}}>Nuevo faltante</div>
-<Field label="¿Qué falta? *" style={{marginBottom:12}}><Inp value={form.nombre} onChange={v=>setForm(f=>({…f,nombre:v}))} placeholder=“Nombre del producto”/></Field>
-<Field label="Urgencia" style={{marginBottom:12}}>
-<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>{URGENCIAS.map(u=><Chip key={u.v} label={u.l} selected={form.urgencia===u.v} color={u.color} onClick={()=>setForm(f=>({…f,urgencia:u.v}))}/>)}</div>
-</Field>
-<Field label="Sección" style={{marginBottom:12}}>
-<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>{STOCK_CATS.map(c=><Chip key={c.id} label={c.label} selected={form.seccion===c.id} color={c.color} onClick={()=>setForm(f=>({…f,seccion:c.id}))}/>)}</div>
-</Field>
-<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}}>
-<Field label="Cantidad"><Inp type=“number” value={form.cantidad} onChange={v=>setForm(f=>({…f,cantidad:v}))} placeholder=“Opcional”/></Field>
-<Field label="Unidad"><Sel value={form.unidad} onChange={v=>setForm(f=>({…f,unidad:v}))} options={[{v:“unidades”,l:“Unidades”},{v:“kg”,l:“Kg”},{v:“litros”,l:“Litros”},{v:“cajas”,l:“Cajas”}]}/></Field>
-</div>
-<Field label="Notas" style={{marginBottom:14}}><Inp value={form.notas} onChange={v=>setForm(f=>({…f,notas:v}))} placeholder=“Proveedor, referencia…”/></Field>
-<Btn full onClick={guardar}>Guardar</Btn>
-</Card>}
-{pend.length===0?<div style={{textAlign:“center”,paddingTop:60,color:T.inkLight}}><div style={{fontSize:44,marginBottom:12}}>✅</div><div style={{fontSize:18,fontWeight:700,color:T.inkMid}}>¡Sin faltantes!</div></div>
-:([“alta”,“media”,“baja”].map(urg=>{
+return h(“div”,null,
+h(“div”,{style:{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:16}},
+h(“div”,null,
+h(“div”,{style:{fontSize:20,fontWeight:800,color:T.inkB}},“🛒 Faltantes”),
+h(“div”,{style:{color:T.inkL,fontSize:12,marginTop:2}},`${pend.length} pendiente${pend.length!==1?"s":""} · ${ped.length} pedido${ped.length!==1?"s":""}`)
+),
+h(“div”,{style:{display:“flex”,gap:8}},
+ped.length>0&&h(Btn,{small:true,variant:“outline”,onClick:()=>setVa(v=>!v)},va?“← Volver”:h(Fragment,null,“📁 “,h(“span”,{style:{background:T.green,color:T.bgD,borderRadius:R.ba,padding:“1px 6px”,fontSize:10,fontWeight:900,marginLeft:4}},ped.length))),
+!va&&h(Btn,{onClick:()=>setSf(!sf)},sf?“Cancelar”:”+ Agregar”)
+)
+),
+va?h(“div”,null,
+h(“div”,{style:{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:14}},
+h(“span”,{style:{fontWeight:700,color:T.green,fontSize:15}},“📁 Pedidos realizados”),
+ped.length>0&&h(Btn,{small:true,variant:“danger”,onClick:limpiar},“🗑️ Limpiar”)
+),
+ped.length===0?h(“div”,{style:{textAlign:“center”,paddingTop:40,color:T.inkL}},“No hay pedidos.”):
+h(“div”,{style:{display:“grid”,gap:8}},ped.map(item=>{
+const ug=UG.find(u=>u.v===item.urgencia);
+const sc_=SC.find(c=>c.id===item.seccion);
+return h(“div”,{key:item.id,style:{background:T.bgC,border:`1px solid ${T.green}33`,borderLeft:`3px solid ${T.green}`,borderRadius:R.c,padding:“12px 14px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,gap:8,flexWrap:“wrap”}},
+h(“div”,{style:{flex:1,minWidth:0}},
+h(“div”,{style:{display:“flex”,gap:8,alignItems:“center”,marginBottom:4,flexWrap:“wrap”}},
+h(“span”,{style:{color:T.green}},“✓”),
+h(“span”,{style:{fontWeight:700,fontSize:14,color:T.inkM,textDecoration:“line-through”}},item.nombre),
+ug&&h(Tag,{color:ug.color},ug.l),
+sc_&&h(Tag,{color:sc_.color},sc_.label)
+),
+h(“div”,{style:{color:T.inkL,fontSize:12}},item.pedidoPor&&`Por ${item.pedidoPor}`,item.fechaPedido&&` · ${item.fechaPedido}`)
+),
+h(“div”,{style:{display:“flex”,gap:8,alignItems:“center”}},
+h(Btn,{small:true,variant:“ghost”,onClick:()=>togPed(item.id)},“↩”),
+h(Trash,{onClick:()=>trash(item)})
+)
+);
+}))
+):h(Fragment,null,
+sf&&h(Card,{style:{borderColor:T.red+“44”,marginBottom:18},glow:T.redG},
+h(“div”,{style:{fontWeight:800,color:T.red,marginBottom:14}},“Nuevo faltante”),
+h(Field,{label:”¿Qué falta? *”,style:{marginBottom:12}},h(Inp,{value:form.nombre,onChange:v=>setForm(f=>({…f,nombre:v})),placeholder:“Nombre del producto”})),
+h(Field,{label:“Urgencia”,style:{marginBottom:12}},
+h(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”}},UG.map(u=>h(Chip,{key:u.v,label:u.l,selected:form.urgencia===u.v,color:u.color,onClick:()=>setForm(f=>({…f,urgencia:u.v}))})))
+),
+h(Field,{label:“Sección”,style:{marginBottom:12}},
+h(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”}},SC.map(c=>h(Chip,{key:c.id,label:c.label,selected:form.seccion===c.id,color:c.color,onClick:()=>setForm(f=>({…f,seccion:c.id}))})))
+),
+h(“div”,{style:{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}},
+h(Field,{label:“Cantidad”},h(Inp,{type:“number”,value:form.cantidad,onChange:v=>setForm(f=>({…f,cantidad:v})),placeholder:“Opcional”})),
+h(Field,{label:“Unidad”},h(Sel,{value:form.unidad,onChange:v=>setForm(f=>({…f,unidad:v})),options:[{v:“unidades”,l:“Unidades”},{v:“kg”,l:“Kg”},{v:“litros”,l:“Litros”},{v:“cajas”,l:“Cajas”}]}))
+),
+h(Field,{label:“Notas”,style:{marginBottom:14}},h(Inp,{value:form.notas,onChange:v=>setForm(f=>({…f,notas:v})),placeholder:“Proveedor, referencia…”})),
+h(Btn,{full:true,onClick:guardar},“Guardar”)
+),
+pend.length===0?h(“div”,{style:{textAlign:“center”,paddingTop:60,color:T.inkL}},h(“div”,{style:{fontSize:44,marginBottom:12}},“✅”),h(“div”,{style:{fontSize:18,fontWeight:700,color:T.inkM}},”¡Sin faltantes!”)):
+[“alta”,“media”,“baja”].map(urg=>{
 const gr=pend.filter(f=>f.urgencia===urg);
 if(!gr.length)return null;
-const ui=URGENCIAS.find(u=>u.v===urg);
-return<div key={urg} style={{marginBottom:18}}>
-<div style={{display:“flex”,alignItems:“center”,gap:8,marginBottom:8}}>
-<div style={{width:3,height:16,background:ui.color,borderRadius:1}}/>
-<span style={{fontWeight:700,fontSize:12,color:ui.color,textTransform:“uppercase”,letterSpacing:1.5}}>{ui.l}</span>
-<span style={{background:ui.color+“22”,color:ui.color,borderRadius:R.badge,padding:“1px 8px”,fontSize:11,fontWeight:700}}>{gr.length}</span>
-</div>
-{gr.map(item=>{
-const sc=STOCK_CATS.find(c=>c.id===item.seccion);
+const ui=UG.find(u=>u.v===urg);
+return h(“div”,{key:urg,style:{marginBottom:18}},
+h(“div”,{style:{display:“flex”,alignItems:“center”,gap:8,marginBottom:8}},
+h(“div”,{style:{width:3,height:16,background:ui.color,borderRadius:1}}),
+h(“span”,{style:{fontWeight:700,fontSize:12,color:ui.color,textTransform:“uppercase”,letterSpacing:1.5}},ui.l),
+h(“span”,{style:{background:ui.color+“22”,color:ui.color,borderRadius:R.ba,padding:“1px 8px”,fontSize:11,fontWeight:700}},gr.length)
+),
+gr.map(item=>{
+const sc_=SC.find(c=>c.id===item.seccion);
 const uid=`chk_${item.id}`;
-return<div key={item.id} style={{display:“flex”,alignItems:“center”,gap:8,marginBottom:2}}>
-<input type=“checkbox” id={uid} className=“checklist-cb” checked={item.pedido||false} onChange={()=>togPed(item.id)}/>
-<label htmlFor={uid} className=“checklist-label” style={{flex:1,border:`1px solid ${uc(item.urgencia)}33`,borderLeft:`3px solid ${uc(item.urgencia)}`}}>
-<div className="checklist-box">
-<svg className="check-icon" width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1 5L4.5 8.5L12 1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-</div>
-<div style={{flex:1,minWidth:0}}>
-<div style={{display:“flex”,gap:8,alignItems:“center”,flexWrap:“wrap”,marginBottom:2}}>
-<span className="checklist-text" style={{fontWeight:700,fontSize:14,color:T.inkBright}}>{item.nombre}</span>
-{sc&&<Tag color={sc.color}>{sc.label}</Tag>}
-</div>
-<div style={{color:T.inkLight,fontSize:11}}>{item.cantidad&&`${item.cantidad} ${item.unidad}`}{item.notas&&` · ${item.notas}`}</div>
-</div>
-</label>
-<TrashBtn onClick={()=>trash(item)}/>
-</div>;
-})}
-</div>;
-}))}
-</>
-)}
+return h(“div”,{key:item.id,style:{display:“flex”,alignItems:“center”,gap:8,marginBottom:2}},
+h(“input”,{type:“checkbox”,id:uid,className:“cb”,checked:item.pedido||false,onChange:()=>togPed(item.id)}),
+h(“label”,{htmlFor:uid,className:“cl”,style:{flex:1,border:`1px solid ${uc(item.urgencia)}33`,borderLeft:`3px solid ${uc(item.urgencia)}`}},
+h(“div”,{className:“cbox”},
+h(“svg”,{className:“ci”,width:13,height:10,viewBox:“0 0 13 10”,fill:“none”},h(“path”,{d:“M1 5L4.5 8.5L12 1”,stroke:“white”,strokeWidth:“2.5”,strokeLinecap:“round”,strokeLinejoin:“round”}))
+),
+h(“div”,{style:{flex:1,minWidth:0}},
+h(“div”,{style:{display:“flex”,gap:8,alignItems:“center”,flexWrap:“wrap”,marginBottom:2}},
+h(“span”,{className:“ct”,style:{fontWeight:700,fontSize:14,color:T.inkB}},item.nombre),
+sc_&&h(Tag,{color:sc_.color},sc_.label)
+),
+h(“div”,{style:{color:T.inkL,fontSize:11}},item.cantidad&&`${item.cantidad} ${item.unidad}`,item.notas&&` · ${item.notas}`)
+)
+),
+h(Trash,{onClick:()=>trash(item)})
+);
+})
+);
+})
+)
+);
+};
 
-  </div>;
-}
-
-// ── APP ROOT ──────────────────────────────────────────────────────────────────
-function App() {
+// ── APP ──────────────────────────────────────────────────────────────────────
+const App=()=>{
 const [user,setUser]=useState(null);
 const [tab,setTab]=useState(“dashboard”);
-const [data,setData]=useState(loadData);
+const [data,setData]=useState(ld);
 const [showPap,setShowPap]=useState(false);
 
-useEffect(()=>{const s=loadSession();if(s){const u=USERS.find(u=>u.id===s);if(u)setUser(u);}}, []);
+useEffect(()=>{
+const s=ls();
+if(s){const u=USERS.find(u=>u.id===s);if(u)setUser(u);}
+},[]);
 useEffect(()=>{
 setData(d=>{
 const now=Date.now();
-const p=(d.papelera||[]).filter(x=>(now-x.fechaEliminacion)<DIAS_PAPELERA*86400000);
+const p=(d.papelera||[]).filter(x=>(now-x.fechaEliminacion)<DIAS*86400000);
 if(p.length===(d.papelera||[]).length)return d;
 return{…d,papelera:p};
 });
 },[]);
-useEffect(()=>{saveData(data);},[data]);
+useEffect(()=>{sd(data);},[data]);
 
-const login=u=>{setUser(u);saveSession(u.id);setTab(“dashboard”);};
-const logout=()=>{setUser(null);clearSession();};
+const login=u=>{setUser(u);ss(u.id);setTab(“dashboard”);};
+const logout=()=>{setUser(null);cs();};
 
 const restore=idx=>{
 const p=data.papelera[idx];
@@ -930,7 +755,7 @@ return{…d,papelera:pap};
 const delPap=idx=>setData(d=>({…d,papelera:d.papelera.filter((*,i)=>i!==idx)}));
 
 const fu=data.faltantes.filter(f=>!f.pedido&&f.urgencia===“alta”).length;
-const sa=STOCK_CATS.reduce((a,c)=>a+(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).length,0);
+const sa=SC.reduce((a,c)=>a+(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).length,0);
 const pc=(data.papelera||[]).length;
 
 const TABS=[
@@ -940,88 +765,87 @@ const TABS=[
 {id:“faltantes”,icon:“🛒”,label:“Faltan”, badge:fu},
 ];
 
-if(!user)return<Login onLogin={login}/>;
+if(!user)return h(Login,{onLogin:login});
 
-return<div style={{minHeight:“100vh”,background:T.bg,fontFamily:”‘Lora’,Georgia,serif”,color:T.ink}}>
-{showPap&&<PapeleraModal papelera={data.papelera||[]} onRestore={restore} onDelete={delPap} onClose={()=>setShowPap(false)}/>}
+const NavBtn=({t})=>h(“button”,{
+className:`nbb${tab===t.id?" act":""}`,
+onTouchEnd:e=>{e.preventDefault();setTab(t.id);},
+onClick:()=>setTab(t.id),
+},
+h(“span”,{className:“nbi”},t.icon),
+h(“span”,null,t.label),
+t.badge>0&&h(“span”,{className:“nbadge”},t.badge)
+);
+
+return h(“div”,{style:{minHeight:“100vh”,background:T.bg,fontFamily:”‘Lora’,Georgia,serif”,color:T.ink}},
+showPap&&h(PapeleraModal,{papelera:data.papelera||[],onRestore:restore,onDelete:delPap,onClose:()=>setShowPap(false)}),
 
 ```
-{/* NAVBAR TOP — solo en tablet/desktop (>600px) */}
-<div className="navbar-top" style={{background:T.bgCard,borderBottom:`1px solid ${T.border}`,padding:"0 20px",position:"sticky",top:0,zIndex:100,boxShadow:"0 4px 20px #00000060"}}>
-  <div style={{maxWidth:880,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-    <div style={{fontWeight:900,fontSize:20,color:T.blue,padding:"13px 0",letterSpacing:2,textShadow:`0 0 20px ${T.blueGlow}`}}>✦ SalónPro</div>
-    <nav style={{display:"flex",gap:2}}>
-      {TABS.map(t=><button key={t.id}
-        onTouchEnd={e=>{e.preventDefault();setTab(t.id);}}
-        onClick={()=>setTab(t.id)}
-        style={{background:tab===t.id?T.blue+"18":"transparent",color:tab===t.id?T.blue:T.inkMid,border:"none",borderRadius:R.btn,padding:"10px 14px",fontWeight:tab===t.id?700:500,fontSize:14,cursor:"pointer",fontFamily:"inherit",position:"relative",transition:"all .15s",boxShadow:tab===t.id?`0 0 12px ${T.blueGlow}`:"none",WebkitTapHighlightColor:"transparent",minHeight:44}}>
-        {t.icon} {t.label}
-        {t.badge>0&&<span style={{position:"absolute",top:5,right:4,background:T.red,color:"#fff",borderRadius:R.badge,width:17,height:17,fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{t.badge}</span>}
-      </button>)}
-    </nav>
-    <div style={{display:"flex",alignItems:"center",gap:8}}>
-      <button
-        onTouchEnd={e=>{e.preventDefault();setShowPap(true);}}
-        onClick={()=>setShowPap(true)}
-        style={{position:"relative",background:"none",border:`1.5px solid ${T.border}`,borderRadius:R.btn,width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
-        <svg viewBox="0 0 448 512" style={{width:16,height:16,fill:T.inkLight}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
-        {pc>0&&<span style={{position:"absolute",top:-5,right:-5,background:T.inkLight,color:T.bgDeep,borderRadius:R.badge,width:17,height:17,fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{pc}</span>}
-      </button>
-      <div style={{background:user.bg,border:`1.5px solid ${user.color}44`,borderRadius:R.btn,padding:"6px 12px 6px 8px",display:"flex",alignItems:"center",gap:8}}>
-        <span style={{fontSize:18}}>{user.avatar}</span>
-        <span style={{fontWeight:700,fontSize:13,color:user.color}}>{user.name}</span>
-      </div>
-      <button onTouchEnd={e=>{e.preventDefault();logout();}} onClick={logout} style={{background:"none",border:`1.5px solid ${T.border}`,borderRadius:R.btn,padding:"6px 12px",color:T.inkLight,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600,minHeight:44,WebkitTapHighlightColor:"transparent"}}>Salir</button>
-    </div>
-  </div>
-</div>
+// NAVBAR TOP (tablet/desktop)
+h("div",{className:"nt",style:{background:T.bgC,borderBottom:`1px solid ${T.brd}`,padding:"0 20px",position:"sticky",top:0,zIndex:100,boxShadow:"0 4px 20px #00000060"}},
+  h("div",{style:{maxWidth:880,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}},
+    h("div",{style:{fontWeight:900,fontSize:20,color:T.blue,padding:"13px 0",letterSpacing:2,textShadow:`0 0 20px ${T.blueG}`}},"✦ SalónPro"),
+    h("nav",{style:{display:"flex",gap:2}},
+      TABS.map(t=>h("button",{key:t.id,
+        onTouchEnd:e=>{e.preventDefault();setTab(t.id);},
+        onClick:()=>setTab(t.id),
+        style:{background:tab===t.id?T.blue+"18":"transparent",color:tab===t.id?T.blue:T.inkM,border:"none",borderRadius:R.b,padding:"10px 14px",fontWeight:tab===t.id?700:500,fontSize:14,cursor:"pointer",fontFamily:"inherit",position:"relative",transition:"all .15s",minHeight:44,WebkitTapHighlightColor:"transparent"}},
+        t.icon," ",t.label,
+        t.badge>0&&h("span",{style:{position:"absolute",top:5,right:4,background:T.red,color:"#fff",borderRadius:R.ba,width:17,height:17,fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}},t.badge)
+      ))
+    ),
+    h("div",{style:{display:"flex",alignItems:"center",gap:8}},
+      h("button",{onTouchEnd:e=>{e.preventDefault();setShowPap(true);},onClick:()=>setShowPap(true),style:{position:"relative",background:"none",border:`1.5px solid ${T.brd}`,borderRadius:R.b,width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",WebkitTapHighlightColor:"transparent"}},
+        h("svg",{viewBox:"0 0 448 512",style:{width:16,height:16,fill:T.inkL}},h("path",{d:"M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"})),
+        pc>0&&h("span",{style:{position:"absolute",top:-5,right:-5,background:T.inkL,color:T.bgD,borderRadius:R.ba,width:17,height:17,fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}},pc)
+      ),
+      h("div",{style:{background:user.bg,border:`1.5px solid ${user.color}44`,borderRadius:R.b,padding:"6px 12px 6px 8px",display:"flex",alignItems:"center",gap:8}},
+        h("span",{style:{fontSize:18}},user.avatar),
+        h("span",{style:{fontWeight:700,fontSize:13,color:user.color}},user.name)
+      ),
+      h("button",{onTouchEnd:e=>{e.preventDefault();logout();},onClick:logout,style:{background:"none",border:`1.5px solid ${T.brd}`,borderRadius:R.b,padding:"6px 12px",color:T.inkL,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600,minHeight:44,WebkitTapHighlightColor:"transparent"}},"Salir")
+    )
+  )
+),
 
-{/* NAVBAR BOTTOM — solo en móvil (<600px) */}
-<div className="navbar-bottom">
-  {TABS.map(t=><button key={t.id}
-    className={`nav-bottom-btn${tab===t.id?" active":""}`}
-    onTouchEnd={e=>{e.preventDefault();setTab(t.id);}}
-    onClick={()=>setTab(t.id)}>
-    <span className="nav-icon">{t.icon}</span>
-    <span>{t.label}</span>
-    {t.badge>0&&<span className="nav-badge">{t.badge}</span>}
-  </button>)}
-  {/* Papelera en navbar bottom */}
-  <button
-    className="nav-bottom-btn"
-    onTouchEnd={e=>{e.preventDefault();setShowPap(true);}}
-    onClick={()=>setShowPap(true)}
-    style={{position:"relative"}}>
-    <span className="nav-icon">
-      <svg viewBox="0 0 448 512" style={{width:20,height:20,fill:tab==="papelera"?T.blue:T.inkLight,verticalAlign:"middle"}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
-    </span>
-    <span>Papelera</span>
-    {pc>0&&<span className="nav-badge">{pc}</span>}
-  </button>
-</div>
+// NAVBAR BOTTOM (móvil)
+h("div",{className:"nb"},
+  TABS.map(t=>h(NavBtn,{key:t.id,t})),
+  h("button",{
+    className:"nbb",
+    onTouchEnd:e=>{e.preventDefault();setShowPap(true);},
+    onClick:()=>setShowPap(true),
+    style:{position:"relative"}
+  },
+    h("span",{className:"nbi"},
+      h("svg",{viewBox:"0 0 448 512",style:{width:22,height:22,fill:"currentColor",verticalAlign:"middle"}},h("path",{d:"M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"}))
+    ),
+    h("span",null,"Papelera"),
+    pc>0&&h("span",{className:"nbadge"},pc)
+  )
+),
 
-{/* CONTENIDO */}
-<div className="page-content" style={{maxWidth:880,margin:"0 auto",padding:"20px 16px 100px"}}>
-  {/* Usuario pill en móvil */}
-  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,padding:"0 2px"}}>
-    <div style={{display:"flex",alignItems:"center",gap:8,background:user.bg,border:`1.5px solid ${user.color}44`,borderRadius:R.btn,padding:"6px 12px 6px 8px"}}>
-      <span style={{fontSize:18}}>{user.avatar}</span>
-      <span style={{fontWeight:700,fontSize:13,color:user.color}}>{user.name}</span>
-    </div>
-    <button onTouchEnd={e=>{e.preventDefault();logout();}} onClick={logout} style={{background:"none",border:`1.5px solid ${T.border}`,borderRadius:R.btn,padding:"6px 12px",color:T.inkLight,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600,minHeight:44,WebkitTapHighlightColor:"transparent"}}>Salir</button>
-  </div>
-
-  {tab==="dashboard"&&<Dashboard data={data} user={user}/>}
-  {tab==="eventos"  &&<Eventos   data={data} setData={setData} user={user}/>}
-  {tab==="stock"    &&<Stock     data={data} setData={setData} user={user}/>}
-  {tab==="faltantes"&&<Faltantes data={data} setData={setData} user={user}/>}
-</div>
+// CONTENT
+h("div",{className:"pc",style:{maxWidth:880,margin:"0 auto",padding:"16px 16px 100px"}},
+  // User pill en móvil
+  h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}},
+    h("div",{style:{background:user.bg,border:`1.5px solid ${user.color}44`,borderRadius:R.b,padding:"6px 12px 6px 8px",display:"flex",alignItems:"center",gap:8}},
+      h("span",{style:{fontSize:18}},user.avatar),
+      h("span",{style:{fontWeight:700,fontSize:13,color:user.color}},user.name)
+    ),
+    h("button",{onTouchEnd:e=>{e.preventDefault();logout();},onClick:logout,style:{background:"none",border:`1.5px solid ${T.brd}`,borderRadius:R.b,padding:"6px 12px",color:T.inkL,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600,minHeight:44,WebkitTapHighlightColor:"transparent"}},"Salir")
+  ),
+  tab==="dashboard"&&h(Dashboard,{data,user}),
+  tab==="eventos"  &&h(Eventos,  {data,setData,user}),
+  tab==="stock"    &&h(Stock,    {data,setData,user}),
+  tab==="faltantes"&&h(Faltantes,{data,setData,user})
+)
 ```
 
-  </div>;
-}
+);
+};
 
-ReactDOM.createRoot(document.getElementById(“root”)).render(<App/>);
+ReactDOM.createRoot(document.getElementById(“app”)).render(h(App));
 </script>
 
 </body>
