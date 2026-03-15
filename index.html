@@ -1,784 +1,1032 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="theme-color" content="#0f1729"/>
   <title>SalónPro</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&display=swap" rel="stylesheet"/>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
+    /* ── RESET & BASE ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0f1729; font-family: 'Lora', Georgia, serif; color: #b2ccd6; }
-    input, select, button { font-family: 'Lora', Georgia, serif; }
+    html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+    body {
+      background: #0f1729;
+      font-family: 'Lora', Georgia, serif;
+      color: #b2ccd6;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: none;
+    }
+    input, select, button, textarea { font-family: 'Lora', Georgia, serif; }
     input::placeholder { color: #4a6070; }
     input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0a0f1e; }
-    ::-webkit-scrollbar-thumb { background: #2a3347; border-radius: 2px; }
-    .trash-btn { width:36px;height:36px;border-radius:3px;border:1.5px solid #2a3347;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease;flex-shrink:0; }
-    .trash-btn:hover { background:#f8717118;border-color:#f87171;box-shadow:0 0 12px #f8717133; }
-    .trash-btn:hover .trash-svg { fill:#f87171; }
-    .trash-btn:active { transform:scale(.92); }
-    .trash-svg { width:15px;height:15px;fill:#4a6070;transition:fill .2s ease; }
-    .checklist-item { transition:all .25s ease; }
-    .checklist-cb { display:none; }
-    .checklist-label { display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;background:#1d2535;border-radius:4px;border:1px solid #2a3347;margin-bottom:8px;transition:all .25s ease;user-select:none; }
-    .checklist-label:hover { border-color:#34d39966;background:#34d39908; }
-    .checklist-box { width:22px;height:22px;flex-shrink:0;border:2px solid #2a3347;border-radius:2px;display:flex;align-items:center;justify-content:center;transition:all .25s ease;background:#0a0f1e; }
-    .checklist-cb:checked + .checklist-label { opacity:.5; }
-    .checklist-cb:checked + .checklist-label .checklist-box { background:#34d399;border-color:#34d399;box-shadow:0 0 10px #34d39933; }
-    .checklist-cb:checked + .checklist-label .checklist-text { text-decoration:line-through;color:#4a6070; }
-    .check-icon { opacity:0;transform:scale(0);transition:all .2s ease; }
-    .checklist-cb:checked + .checklist-label .check-icon { opacity:1;transform:scale(1); }
-    .flip-card { width:190px;height:254px;perspective:1000px;cursor:pointer; }
-    .flip-inner { width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.7s cubic-bezier(.4,0,.2,1); }
-    .flip-card:hover .flip-inner, .flip-card.flipped .flip-inner { transform:rotateY(180deg); }
-    .flip-front, .flip-back { position:absolute;inset:0;backface-visibility:hidden;border-radius:4px; }
-    .flip-back { transform:rotateY(180deg); }
+
+```
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0a0f1e; }
+::-webkit-scrollbar-thumb { background: #2a3347; border-radius: 2px; }
+
+/* ── TOUCH — eliminar delay y highlight en todos los elementos táctiles ── */
+button, a, label, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* ── BOTONES — mínimo 44px de alto para touch targets ── */
+button { min-height: 44px; }
+
+/* ── TRASH BTN ── */
+.trash-btn {
+  width: 44px; height: 44px;
+  border-radius: 3px;
+  border: 1.5px solid #2a3347;
+  background: transparent;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.trash-btn:active { background: #f8717130; border-color: #f87171; }
+@media (hover: hover) {
+  .trash-btn:hover { background: #f8717118; border-color: #f87171; box-shadow: 0 0 12px #f8717133; }
+  .trash-btn:hover .trash-svg { fill: #f87171; }
+}
+.trash-svg { width: 16px; height: 16px; fill: #4a6070; transition: fill .15s; }
+
+/* ── CHECKLIST ── */
+.checklist-cb { display: none; }
+.checklist-label {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: #1d2535;
+  border-radius: 4px;
+  border: 1px solid #2a3347;
+  margin-bottom: 8px;
+  transition: background .2s, border-color .2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 56px;
+}
+.checklist-label:active { background: #34d39910; }
+@media (hover: hover) { .checklist-label:hover { border-color: #34d39966; background: #34d39908; } }
+.checklist-box {
+  width: 24px; height: 24px; flex-shrink: 0;
+  border: 2px solid #2a3347; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; background: #0a0f1e;
+}
+.checklist-cb:checked + .checklist-label .checklist-box { background: #34d399; border-color: #34d399; box-shadow: 0 0 10px #34d39933; }
+.checklist-cb:checked + .checklist-label .checklist-text { text-decoration: line-through; color: #4a6070; }
+.checklist-cb:checked + .checklist-label { opacity: .55; }
+.check-icon { opacity: 0; transform: scale(0); transition: all .18s; }
+.checklist-cb:checked + .checklist-label .check-icon { opacity: 1; transform: scale(1); }
+
+/* ── FLIP CARD — 100% controlado por React state, sin :hover ── */
+.flip-card { perspective: 1000px; -webkit-tap-highlight-color: transparent; }
+.flip-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+  -webkit-transition: -webkit-transform 0.55s cubic-bezier(.4,0,.2,1);
+}
+.flip-card.flipped .flip-inner {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+}
+.flip-front, .flip-back {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.flip-back { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
+
+/* ── NAVBAR BOTTOM para móvil ── */
+@media (max-width: 600px) {
+  .navbar-top { display: none !important; }
+  .navbar-bottom { display: flex !important; }
+  .page-content { padding-bottom: 80px !important; }
+}
+.navbar-bottom {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: #1d2535;
+  border-top: 1px solid #2a3347;
+  z-index: 100;
+  padding: 0;
+  box-shadow: 0 -4px 20px #00000060;
+}
+.nav-bottom-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; padding: 10px 4px;
+  background: none; border: none;
+  color: #7a90a4; font-size: 10px; font-weight: 600;
+  cursor: pointer; transition: color .15s;
+  min-height: 60px; position: relative;
+  -webkit-tap-highlight-color: transparent;
+  font-family: 'Lora', Georgia, serif;
+  letter-spacing: .3px;
+}
+.nav-bottom-btn.active { color: #818cf8; }
+.nav-bottom-btn .nav-icon { font-size: 20px; line-height: 1; }
+.nav-badge {
+  position: absolute; top: 6px; right: calc(50% - 18px);
+  background: #f87171; color: #fff;
+  border-radius: 2px; width: 16px; height: 16px;
+  font-size: 9px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── INPUTS — tamaño mínimo 16px para evitar zoom en iOS ── */
+input, select { font-size: 16px !important; }
+@media (min-width: 601px) { input, select { font-size: 14px !important; } }
+```
+
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-const { useState, useEffect } = React;
+const { useState, useEffect, useCallback } = React;
 
-const STORAGE_KEY = "salonpro_v4";
-const SESSION_KEY = "salonpro_session";
+const STORAGE_KEY = “salonpro_v5”;
+const SESSION_KEY = “salonpro_session”;
 const DIAS_PAPELERA = 7;
 
-const defaultData = () => ({
-  eventos: [], stock: { cocina:[], mozos:[], limpieza:[], freezer:[] },
-  faltantes: [], papelera: [],
-});
-
-function loadData() { try { const s=localStorage.getItem(STORAGE_KEY); if(s)return JSON.parse(s); } catch{} return defaultData(); }
-function saveData(d) { try { localStorage.setItem(STORAGE_KEY,JSON.stringify(d)); } catch{} }
-function loadSession() { try { return localStorage.getItem(SESSION_KEY); } catch{} return null; }
-function saveSession(u) { try { localStorage.setItem(SESSION_KEY,u); } catch{} }
-function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch{} }
+const defaultData = () => ({ eventos:[], stock:{cocina:[],mozos:[],limpieza:[],freezer:[]}, faltantes:[], papelera:[] });
+function loadData() { try{const s=localStorage.getItem(STORAGE_KEY);if(s)return JSON.parse(s);}catch{}return defaultData(); }
+function saveData(d) { try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}catch{} }
+function loadSession() { try{return localStorage.getItem(SESSION_KEY);}catch{}return null; }
+function saveSession(u) { try{localStorage.setItem(SESSION_KEY,u);}catch{} }
+function clearSession() { try{localStorage.removeItem(SESSION_KEY);}catch{} }
 
 const USERS = [
-  { id:"cordoba", name:"Córdoba", avatar:"👨‍💼", color:"#818cf8", bg:"#818cf820", role:"Administración" },
-  { id:"jere",    name:"Jere",    avatar:"🤵",   color:"#34d399", bg:"#34d39920", role:"Servicio" },
-  { id:"erica",   name:"Érica",   avatar:"👑",   color:"#c084fc", bg:"#c084fc20", role:"Coordinación" },
+{ id:“cordoba”, name:“Córdoba”, avatar:“👨‍💼”, color:”#818cf8”, bg:”#818cf820”, role:“Administración” },
+{ id:“jere”,    name:“Jere”,    avatar:“🤵”,   color:”#34d399”, bg:”#34d39920”, role:“Servicio” },
+{ id:“erica”,   name:“Érica”,   avatar:“👑”,   color:”#c084fc”, bg:”#c084fc20”, role:“Coordinación” },
 ];
 
 const T = {
-  bg:"#0f1729", bgDeep:"#0a0f1e", bgCard:"#1d2535", bgHover:"#252d42",
-  border:"#2a3347", ink:"#b2ccd6", inkBright:"#e2e8f0", inkMid:"#7a90a4", inkLight:"#4a6070",
-  blue:"#818cf8", blueGlow:"#818cf833", violet:"#c084fc", violetGlow:"#c084fc33",
-  cyan:"#22d3ee", cyanGlow:"#22d3ee33", green:"#34d399", greenGlow:"#34d39933",
-  red:"#f87171", redGlow:"#f8717133", gold:"#fbbf24", goldGlow:"#fbbf2433",
+bg:”#0f1729”, bgDeep:”#0a0f1e”, bgCard:”#1d2535”,
+border:”#2a3347”, ink:”#b2ccd6”, inkBright:”#e2e8f0”, inkMid:”#7a90a4”, inkLight:”#4a6070”,
+blue:”#818cf8”, blueGlow:”#818cf833”, violet:”#c084fc”, violetGlow:”#c084fc33”,
+cyan:”#22d3ee”, green:”#34d399”, greenGlow:”#34d39933”,
+red:”#f87171”, redGlow:”#f8717133”, gold:”#fbbf24”,
 };
-
 const R = { card:4, field:3, btn:3, chip:3, badge:2 };
 
 const TIPO_EVENTO = [
-  { v:"quince", l:"👑 15 Años", color:T.violet },
-  { v:"boda",   l:"💍 Boda",   color:T.blue },
-  { v:"otro",   l:"🎊 Otro",   color:T.cyan },
+{v:“quince”,l:“👑 15 Años”,color:T.violet},
+{v:“boda”,  l:“💍 Boda”,  color:T.blue},
+{v:“otro”,  l:“🎊 Otro”,  color:T.cyan},
 ];
-
 const STOCK_CATS = [
-  { id:"cocina",   label:"🍳 Cocina",   color:T.red },
-  { id:"mozos",    label:"🤵 Mozos",    color:T.blue },
-  { id:"limpieza", label:"🧹 Limpieza", color:T.green },
-  { id:"freezer",  label:"❄️ Freezer",  color:T.cyan },
+{id:“cocina”,  label:“🍳 Cocina”,  color:T.red},
+{id:“mozos”,   label:“🤵 Mozos”,   color:T.blue},
+{id:“limpieza”,label:“🧹 Limpieza”,color:T.green},
+{id:“freezer”, label:“❄️ Freezer”, color:T.cyan},
 ];
-
-const URGENCIAS = [
-  { v:"alta",  l:"🔴 Alta",  color:T.red },
-  { v:"media", l:"🟡 Media", color:T.gold },
-  { v:"baja",  l:"🟢 Baja",  color:T.green },
-];
-
-const PRIMER_PLATO_OPTS = ["Creppes","Canelones","Fiambre y mayo de ave","Fiambre mayo rusa","Capelettis","Ravioles"];
-const ESPECIALES_OPTS   = ["Celíaco","Sin sal","Diabético","Vegetariano","Vegano","Sin lactosa","Celíaco-sin lactosa","Otro"];
-const SOBREMESA_OPTS    = ["Sándwiches de miga","Pata flambeada"];
-const POSTRE_OPTS       = ["Copa Macedonia","Helado solo"];
-const CAMP_POSTRE_OPTS  = ["Copa mousse","Helado solo","Copa Macedonia"];
-
-// ── TRASH BTN ────────────────────────────────────────────────────────────────
-function TrashBtn({ onClick }) {
-  return (
-    <button className="trash-btn" onClick={onClick} title="Mover a papelera">
-      <svg viewBox="0 0 448 512" className="trash-svg">
-        <path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/>
-      </svg>
-    </button>
-  );
-}
+const URGENCIAS   = [{v:“alta”,l:“🔴 Alta”,color:T.red},{v:“media”,l:“🟡 Media”,color:T.gold},{v:“baja”,l:“🟢 Baja”,color:T.green}];
+const PRIMER_PLATO= [“Creppes”,“Canelones”,“Fiambre y mayo de ave”,“Fiambre mayo rusa”,“Capelettis”,“Ravioles”];
+const ESPECIALES  = [“Celíaco”,“Sin sal”,“Diabético”,“Vegetariano”,“Vegano”,“Sin lactosa”,“Celíaco-sin lactosa”,“Otro”];
+const SOBREMESA   = [“Sándwiches de miga”,“Pata flambeada”];
+const POSTRE      = [“Copa Macedonia”,“Helado solo”];
+const CAMP_POSTRE = [“Copa mousse”,“Helado solo”,“Copa Macedonia”];
 
 // ── PRIMITIVES ────────────────────────────────────────────────────────────────
-function Chip({label,selected,color=T.blue,onClick,small}) {
-  return <button onClick={onClick} style={{background:selected?color+"25":T.bgDeep,color:selected?color:T.inkMid,border:`1.5px solid ${selected?color:T.border}`,borderRadius:R.chip,padding:small?"5px 13px":"8px 18px",fontWeight:selected?700:500,fontSize:small?12:13,cursor:"pointer",transition:"all .18s",boxShadow:selected?`0 0 12px ${color}44`:"none",whiteSpace:"nowrap",fontFamily:"inherit"}}>{label}</button>;
+function TrashBtn({onClick}) {
+return <button className=“trash-btn” onTouchEnd={e=>{e.preventDefault();onClick();}} onClick={onClick}>
+<svg viewBox="0 0 448 512" className="trash-svg"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
+</button>;
 }
 
-function Btn({children,onClick,variant="primary",small,full,style={}}) {
-  const v={
-    primary:{background:T.blue,color:T.bgDeep,border:`1.5px solid ${T.blue}`,boxShadow:`0 0 16px ${T.blueGlow}`},
-    outline:{background:"transparent",color:T.blue,border:`1.5px solid ${T.blue}`},
-    ghost:{background:"transparent",color:T.inkMid,border:`1.5px solid ${T.border}`},
-    danger:{background:T.red+"22",color:T.red,border:`1.5px solid ${T.red}`},
-    success:{background:T.green+"22",color:T.green,border:`1.5px solid ${T.green}`},
-  }[variant];
-  return <button onClick={onClick} style={{...v,display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6,fontWeight:700,cursor:"pointer",borderRadius:R.btn,padding:small?"7px 15px":"10px 22px",fontSize:small?13:14,transition:"all .2s",width:full?"100%":undefined,fontFamily:"inherit",...style}} onMouseEnter={e=>e.currentTarget.style.opacity=".8"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>{children}</button>;
+function Chip({label,selected,color=T.blue,onClick,small}) {
+return <button
+onTouchEnd={e=>{e.preventDefault();onClick();}}
+onClick={onClick}
+style={{
+background:selected?color+“25”:T.bgDeep, color:selected?color:T.inkMid,
+border:`1.5px solid ${selected?color:T.border}`, borderRadius:R.chip,
+padding:small?“6px 14px”:“9px 20px”, fontWeight:selected?700:500,
+fontSize:small?13:14, cursor:“pointer”, transition:“all .15s”,
+boxShadow:selected?`0 0 12px ${color}44`:“none”, whiteSpace:“nowrap”,
+fontFamily:“inherit”, minHeight:small?38:44,
+WebkitTapHighlightColor:“transparent”,
+}}>{label}</button>;
 }
+
+function Btn({children,onClick,variant=“primary”,small,full,style={}}) {
+const v={
+primary:{background:T.blue,color:T.bgDeep,border:`1.5px solid ${T.blue}`,boxShadow:`0 0 14px ${T.blueGlow}`},
+outline:{background:“transparent”,color:T.blue,border:`1.5px solid ${T.blue}`},
+ghost:{background:“transparent”,color:T.inkMid,border:`1.5px solid ${T.border}`},
+danger:{background:T.red+“22”,color:T.red,border:`1.5px solid ${T.red}`},
+success:{background:T.green+“22”,color:T.green,border:`1.5px solid ${T.green}`},
+}[variant];
+return <button
+onTouchEnd={e=>{e.preventDefault();onClick&&onClick();}}
+onClick={onClick}
+style={{
+…v, display:“inline-flex”, alignItems:“center”, justifyContent:“center”, gap:6,
+fontWeight:700, cursor:“pointer”, borderRadius:R.btn,
+padding:small?“8px 16px”:“12px 24px”, fontSize:small?13:15,
+transition:“all .15s”, width:full?“100%”:undefined,
+fontFamily:“inherit”, minHeight:small?44:48,
+WebkitTapHighlightColor:“transparent”,
+…style,
+}}
+onTouchStart={e=>e.currentTarget.style.opacity=”.75”}
+onTouchCancel={e=>e.currentTarget.style.opacity=“1”}
+
+> {children}</button>;
+> }
 
 function Field({label,children,style={}}) {
-  return <div style={{display:"flex",flexDirection:"column",gap:6,...style}}>{label&&<label style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:1.5}}>{label}</label>}{children}</div>;
+return <div style={{display:“flex”,flexDirection:“column”,gap:6,…style}}>
+{label&&<label style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:“uppercase”,letterSpacing:1.5}}>{label}</label>}
+{children}
+
+  </div>;
 }
 
-function Inp({value,onChange,placeholder,type="text",style={}}) {
-  return <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{background:T.bgDeep,border:`1.5px solid ${T.border}`,borderRadius:R.field,padding:"10px 14px",color:T.inkBright,fontSize:14,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit",...style}}/>;
+function Inp({value,onChange,placeholder,type=“text”,style={}}) {
+return <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
+style={{background:T.bgDeep,border:`1.5px solid ${T.border}`,borderRadius:R.field,padding:“12px 14px”,color:T.inkBright,outline:“none”,width:“100%”,boxSizing:“border-box”,fontFamily:“inherit”,…style}}/>;
 }
 
 function Sel({value,onChange,options,style={}}) {
-  return <select value={value} onChange={e=>onChange(e.target.value)} style={{background:T.bgDeep,border:`1.5px solid ${T.border}`,borderRadius:R.field,padding:"10px 14px",color:T.inkBright,fontSize:14,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit",...style}}>{options.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select>;
+return <select value={value} onChange={e=>onChange(e.target.value)}
+style={{background:T.bgDeep,border:`1.5px solid ${T.border}`,borderRadius:R.field,padding:“12px 14px”,color:T.inkBright,outline:“none”,width:“100%”,boxSizing:“border-box”,fontFamily:“inherit”,…style}}>
+{options.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+</select>;
 }
 
 function Tag({children,color=T.blue}) {
-  return <span style={{background:color+"20",color,border:`1px solid ${color}44`,borderRadius:R.badge,padding:"2px 10px",fontSize:11,fontWeight:700,letterSpacing:.8,textTransform:"uppercase",whiteSpace:"nowrap"}}>{children}</span>;
+return <span style={{background:color+“20”,color,border:`1px solid ${color}44`,borderRadius:R.badge,padding:“3px 10px”,fontSize:11,fontWeight:700,letterSpacing:.8,textTransform:“uppercase”,whiteSpace:“nowrap”}}>{children}</span>;
 }
 
 function Card({children,style={},accent,glow}) {
-  return <div style={{background:T.bgCard,border:`1px solid ${accent?accent+"44":T.border}`,borderLeft:accent?`3px solid ${accent}`:undefined,borderRadius:R.card,padding:"18px 20px",boxShadow:glow?`0 0 20px ${glow}`:"0 2px 12px #00000030",...style}}>{children}</div>;
+return <div style={{background:T.bgCard,border:`1px solid ${accent?accent+"44":T.border}`,borderLeft:accent?`3px solid ${accent}`:undefined,borderRadius:R.card,padding:“16px 18px”,boxShadow:glow?`0 0 20px ${glow}`:“0 2px 10px #00000030”,…style}}>{children}</div>;
 }
 
 function Divider({label}) {
-  return <div style={{display:"flex",alignItems:"center",gap:12,margin:"20px 0 14px"}}><div style={{flex:1,height:1,background:T.border}}/>{label&&<span style={{color:T.inkLight,fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:1.5,whiteSpace:"nowrap"}}>{label}</span>}<div style={{flex:1,height:1,background:T.border}}/></div>;
+return <div style={{display:“flex”,alignItems:“center”,gap:12,margin:“18px 0 12px”}}>
+<div style={{flex:1,height:1,background:T.border}}/>
+{label&&<span style={{color:T.inkLight,fontSize:11,fontWeight:700,textTransform:“uppercase”,letterSpacing:1.5,whiteSpace:“nowrap”}}>{label}</span>}
+<div style={{flex:1,height:1,background:T.border}}/>
+
+  </div>;
 }
 
 function SeccionBox({title,color,children,defaultOpen=false}) {
-  const [open,setOpen]=useState(defaultOpen);
-  return <div style={{border:`1px solid ${open?color+"44":T.border}`,borderRadius:R.card,overflow:"hidden",marginBottom:8}}><button onClick={()=>setOpen(o=>!o)} style={{width:"100%",background:open?color+"12":T.bgDeep,border:"none",padding:"13px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",fontFamily:"inherit"}}><span style={{fontWeight:700,fontSize:14,color:open?color:T.ink}}>{title}</span><span style={{color:T.inkLight,fontSize:11}}>{open?"▲":"▼"}</span></button>{open&&<div style={{padding:"16px",background:T.bgCard}}>{children}</div>}</div>;
+const [open,setOpen]=useState(defaultOpen);
+return <div style={{border:`1px solid ${open?color+"44":T.border}`,borderRadius:R.card,overflow:“hidden”,marginBottom:8}}>
+<button
+onTouchEnd={e=>{e.preventDefault();setOpen(o=>!o);}}
+onClick={()=>setOpen(o=>!o)}
+style={{width:“100%”,background:open?color+“12”:T.bgDeep,border:“none”,padding:“14px 16px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,cursor:“pointer”,fontFamily:“inherit”,minHeight:50,WebkitTapHighlightColor:“transparent”}}>
+<span style={{fontWeight:700,fontSize:14,color:open?color:T.ink}}>{title}</span>
+<span style={{color:T.inkLight,fontSize:13,fontWeight:700}}>{open?“▲”:“▼”}</span>
+</button>
+{open&&<div style={{padding:“16px”,background:T.bgCard}}>{children}</div>}
+
+  </div>;
 }
 
 // ── PAPELERA MODAL ────────────────────────────────────────────────────────────
 function PapeleraModal({papelera,onRestore,onDelete,onClose}) {
-  const ahora=Date.now();
-  const dias=(f)=>Math.max(0,DIAS_PAPELERA-Math.floor((ahora-f)/86400000));
-  const LABELS={evento:"🎉 Evento",stock:"📦 Stock",faltante:"🛒 Faltante"};
-  return (
-    <div style={{position:"fixed",inset:0,background:"#00000088",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={onClose}>
-      <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:R.card,width:"100%",maxWidth:560,maxHeight:"80vh",overflow:"hidden",display:"flex",flexDirection:"column",boxShadow:"0 0 40px #00000080"}} onClick={e=>e.stopPropagation()}>
-        <div style={{padding:"18px 20px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div>
-            <div style={{fontWeight:800,fontSize:18,color:T.inkBright,display:"flex",alignItems:"center",gap:8}}>
-              <svg viewBox="0 0 448 512" style={{width:18,height:18,fill:T.inkMid}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
-              Papelera
-            </div>
-            <div style={{color:T.inkLight,fontSize:12,marginTop:2}}>Se eliminan automáticamente a los {DIAS_PAPELERA} días</div>
+const ahora=Date.now();
+const dias=f=>Math.max(0,DIAS_PAPELERA-Math.floor((ahora-f)/86400000));
+const LABELS={evento:“🎉 Evento”,stock:“📦 Stock”,faltante:“🛒 Faltante”};
+return <div style={{position:“fixed”,inset:0,background:”#000000aa”,zIndex:1000,display:“flex”,alignItems:“flex-end”,justifyContent:“center”,padding:0}} onClick={onClose}>
+<div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:“8px 8px 0 0”,width:“100%”,maxWidth:600,maxHeight:“85vh”,overflow:“hidden”,display:“flex”,flexDirection:“column”,boxShadow:“0 -4px 40px #00000080”}} onClick={e=>e.stopPropagation()}>
+<div style={{padding:“16px 20px”,borderBottom:`1px solid ${T.border}`,display:“flex”,justifyContent:“space-between”,alignItems:“center”}}>
+<div>
+<div style={{fontWeight:800,fontSize:17,color:T.inkBright,display:“flex”,alignItems:“center”,gap:8}}>
+<svg viewBox="0 0 448 512" style={{width:17,height:17,fill:T.inkMid}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
+Papelera
+</div>
+<div style={{color:T.inkLight,fontSize:12,marginTop:2}}>Se elimina solo a los {DIAS_PAPELERA} días</div>
+</div>
+<button onTouchEnd={e=>{e.preventDefault();onClose();}} onClick={onClose} style={{background:“none”,border:“none”,color:T.inkLight,cursor:“pointer”,fontSize:22,padding:“4px 8px”,minHeight:44,WebkitTapHighlightColor:“transparent”}}>✕</button>
+</div>
+<div style={{overflowY:“auto”,padding:“14px 18px”,flex:1,WebkitOverflowScrolling:“touch”}}>
+{papelera.length===0
+?<div style={{textAlign:“center”,padding:“40px 0”,color:T.inkLight}}>
+<svg viewBox=“0 0 448 512” style={{width:40,height:40,fill:T.inkLight,display:“block”,margin:“0 auto 12px”}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
+La papelera está vacía
+</div>
+:<div style={{display:“grid”,gap:8}}>
+{papelera.map((p,i)=>{
+const d=dias(p.fechaEliminacion);
+const nombre=p.item.cliente||p.item.nombre||“Sin nombre”;
+return <div key={i} style={{background:T.bgDeep,border:`1px solid ${T.border}`,borderRadius:R.card,padding:“12px 14px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,gap:8,flexWrap:“wrap”}}>
+<div style={{flex:1,minWidth:0}}>
+<div style={{display:“flex”,gap:8,alignItems:“center”,marginBottom:4,flexWrap:“wrap”}}>
+<span style={{fontSize:12,color:T.inkLight}}>{LABELS[p.tipo]}</span>
+<span style={{fontWeight:700,color:T.inkBright,fontSize:14}}>{nombre}</span>
+</div>
+<div style={{display:“flex”,gap:10,flexWrap:“wrap”}}>
+<span style={{color:T.inkLight,fontSize:12}}>Por {p.eliminadoPor}</span>
+<span style={{color:d<=1?T.red:T.gold,fontSize:12,fontWeight:700}}>{d===0?“Se elimina hoy”:d===1?“Mañana”:`${d} días`}</span>
+</div>
+</div>
+<div style={{display:“flex”,gap:8}}>
+<Btn small variant=“ghost” onClick={()=>onRestore(i)}>↩ Restaurar</Btn>
+<TrashBtn onClick={()=>onDelete(i)}/>
+</div>
+</div>;
+})}
+</div>
+}
+</div>
+</div>
+
+  </div>;
+}
+
+// ── LOGIN — flip 100% touch-safe ─────────────────────────────────────────────
+function Login({onLogin}) {
+const [flip,setFlip]=useState(null);
+
+const handleTap=useCallback((u)=>{
+if(flip===u.id) return; // si ya está girada, el botón maneja el login
+setFlip(u.id);
+},[flip]);
+
+return <div style={{minHeight:“100vh”,background:`radial-gradient(ellipse at 50% 0%,#1d2d50 0%,${T.bg} 65%)`,display:“flex”,flexDirection:“column”,alignItems:“center”,justifyContent:“center”,padding:“24px 16px”}}>
+<div style={{textAlign:“center”,marginBottom:48}}>
+<div style={{fontSize:44,marginBottom:8,filter:“drop-shadow(0 0 24px #818cf8aa)”}}>✦</div>
+<div style={{fontSize:38,fontWeight:900,color:T.blue,letterSpacing:3,textShadow:`0 0 40px ${T.blueGlow}`}}>SalónPro</div>
+<div style={{color:T.inkMid,fontSize:13,marginTop:8,letterSpacing:2}}>SISTEMA DE GESTIÓN DE EVENTOS</div>
+</div>
+
+```
+<div style={{display:"flex",gap:20,flexWrap:"wrap",justifyContent:"center",width:"100%",maxWidth:620}}>
+  {USERS.map(u=>{
+    const isFlipped=flip===u.id;
+    return <div key={u.id} style={{width:170,height:240,flex:"0 0 170px"}}>
+      <div
+        className={`flip-card${isFlipped?" flipped":""}`}
+        style={{width:"100%",height:"100%"}}
+        onTouchStart={()=>{ if(!isFlipped) setFlip(u.id); }}
+        onClick={()=>{ if(!isFlipped) setFlip(u.id); }}
+      >
+        <div className="flip-inner">
+          {/* BACK */}
+          <div className="flip-back" style={{background:`linear-gradient(135deg,${u.color}22,${u.color}08)`,border:`1.5px solid ${u.color}66`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,boxShadow:`0 0 28px ${u.color}44`}}>
+            <div style={{fontSize:48,filter:`drop-shadow(0 0 14px ${u.color})`}}>{u.avatar}</div>
+            <div style={{fontSize:17,fontWeight:800,color:u.color}}>{u.name}</div>
+            <div style={{fontSize:11,color:T.inkMid,letterSpacing:1,textTransform:"uppercase"}}>{u.role}</div>
+            <button
+              onTouchEnd={e=>{e.preventDefault();e.stopPropagation();onLogin(u);}}
+              onClick={e=>{e.stopPropagation();onLogin(u);}}
+              style={{
+                marginTop:6,background:u.color,color:T.bgDeep,border:"none",
+                borderRadius:R.btn,padding:"12px 28px",fontWeight:800,fontSize:15,
+                cursor:"pointer",fontFamily:"inherit",
+                boxShadow:`0 0 18px ${u.color}88`,
+                WebkitTapHighlightColor:"transparent",
+                minHeight:48,width:"80%",
+              }}
+              onTouchStart={e=>e.currentTarget.style.opacity=".75"}
+              onTouchCancel={e=>e.currentTarget.style.opacity="1"}
+            >Ingresar</button>
           </div>
-          <button onClick={onClose} style={{background:"none",border:"none",color:T.inkLight,cursor:"pointer",fontSize:20,padding:4}}>✕</button>
-        </div>
-        <div style={{overflowY:"auto",padding:"16px 20px",flex:1}}>
-          {papelera.length===0?(
-            <div style={{textAlign:"center",paddingTop:40,paddingBottom:40,color:T.inkLight}}>
-              <svg viewBox="0 0 448 512" style={{width:40,height:40,fill:T.inkLight,display:"block",margin:"0 auto 12px"}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
-              <div style={{fontSize:15}}>La papelera está vacía</div>
+          {/* FRONT */}
+          <div className="flip-front" style={{background:T.bgCard,border:`1.5px solid ${T.border}`,boxShadow:"0 4px 24px #00000060"}}>
+            <div style={{position:"absolute",top:-40,left:-40,width:130,height:130,borderRadius:"50%",background:u.color+"18",filter:"blur(2px)"}}/>
+            <div style={{position:"absolute",top:-20,right:-30,width:90,height:90,borderRadius:"50%",background:u.color+"12",filter:"blur(4px)"}}/>
+            <div style={{position:"relative",zIndex:1,height:"100%",display:"flex",flexDirection:"column",justifyContent:"flex-end",padding:"16px 14px 18px"}}>
+              <div style={{position:"absolute",top:24,left:"50%",transform:"translateX(-50%)",fontSize:48,filter:`drop-shadow(0 0 8px ${u.color}66)`}}>{u.avatar}</div>
+              <div style={{marginBottom:8}}><span style={{background:u.color+"22",color:u.color,border:`1px solid ${u.color}44`,borderRadius:R.badge,padding:"3px 10px",fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>{u.role}</span></div>
+              <div style={{fontWeight:800,fontSize:18,color:T.inkBright,marginBottom:4}}>{u.name}</div>
+              <div style={{fontSize:11,color:T.inkMid}}>Tocá para ingresar 👆</div>
             </div>
-          ):(
-            <div style={{display:"grid",gap:8}}>
-              {papelera.map((p,i)=>{
-                const d=dias(p.fechaEliminacion);
-                const nombre=p.item.cliente||p.item.nombre||"Sin nombre";
-                return(
-                  <div key={i} style={{background:T.bgDeep,border:`1px solid ${T.border}`,borderRadius:R.card,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-                    <div style={{flex:1}}>
-                      <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}>
-                        <span style={{fontSize:13,color:T.inkLight}}>{LABELS[p.tipo]||p.tipo}</span>
-                        <span style={{fontWeight:700,color:T.inkBright,fontSize:14}}>{nombre}</span>
-                      </div>
-                      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-                        <span style={{color:T.inkLight,fontSize:11}}>Por {p.eliminadoPor}</span>
-                        <span style={{color:d<=1?T.red:T.gold,fontSize:11,fontWeight:700}}>{d===0?"Se elimina hoy":d===1?"Se elimina mañana":`${d} días restantes`}</span>
-                      </div>
-                    </div>
-                    <div style={{display:"flex",gap:8}}>
-                      <Btn small variant="ghost" onClick={()=>onRestore(i)}>↩ Restaurar</Btn>
-                      <TrashBtn onClick={()=>onDelete(i)}/>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
+  })}
+</div>
+<div style={{color:T.inkLight,fontSize:12,marginTop:36,letterSpacing:1,textAlign:"center"}}>
+  Tocá tu perfil → luego "Ingresar"
+</div>
+```
+
+  </div>;
 }
 
 // ── MENU FORM ─────────────────────────────────────────────────────────────────
 function MenuForm({menu,setMenu}) {
-  const upd=(k,v)=>setMenu(m=>({...m,[k]:v}));
-  const tipoMenu=menu.tipoMenu||"", esp=menu.especiales||{}, beb=menu.bebidas||{};
-  const togEsp=opt=>{const n={...esp};if(n[opt])delete n[opt];else n[opt]={activo:true,cantidad:""};upd("especiales",n);};
-  const updBeb=(k,v)=>upd("bebidas",{...beb,[k]:v});
-  return (
-    <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:8}}>
-      <SeccionBox title="🥂 Recepción" color={T.gold} defaultOpen>
-        <Field label="Detalle"><Inp value={menu.recepcion||""} onChange={v=>upd("recepcion",v)} placeholder="Ej: bocaditos, brindis..."/></Field>
-      </SeccionBox>
-      <SeccionBox title="🍽️ Tipo de menú" color={T.blue}>
-        <Field label="Seleccioná">
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {[{v:"Campestre",c:T.green},{v:"Con platos",c:T.blue}].map(o=><Chip key={o.v} label={o.v} selected={tipoMenu===o.v} color={o.c} onClick={()=>upd("tipoMenu",tipoMenu===o.v?"":o.v)}/>)}
-          </div>
-        </Field>
-        {tipoMenu==="Campestre"&&<div style={{marginTop:14}}>
-          <Divider label="Menú campestre"/>
-          {["Entrada","Picada","Empanadas","Carnes","Ensalada","Papas fritas"].map(item=>(
-            <div key={item} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:T.bgDeep,borderRadius:R.field,padding:"10px 14px",marginBottom:8}}>
-              <span style={{fontWeight:600,color:T.ink,fontSize:14}}>{item}</span>
-              <div style={{display:"flex",gap:8}}>{["Sí","No"].map(op=><Chip key={op} small label={op} selected={(menu.campestre||{})[item]===op} color={op==="Sí"?T.green:T.red} onClick={()=>upd("campestre",{...(menu.campestre||{}),[item]:op})}/>)}</div>
-            </div>
-          ))}
-          <Field label="Postre"><div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:4}}>{CAMP_POSTRE_OPTS.map(o=><Chip key={o} label={o} selected={(menu.campestre||{}).postre===o} color={T.gold} onClick={()=>upd("campestre",{...(menu.campestre||{}),postre:o})}/>)}</div></Field>
-        </div>}
-        {tipoMenu==="Con platos"&&<div style={{marginTop:14}}>
-          <Divider label="Primer plato — elegí uno"/>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>{PRIMER_PLATO_OPTS.map(o=><Chip key={o} label={o} selected={menu.primerPlato===o} color={T.blue} onClick={()=>upd("primerPlato",menu.primerPlato===o?"":o)}/>)}</div>
-          <Divider label="Segundo plato"/>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:T.bgDeep,borderRadius:R.field,padding:"10px 14px",marginBottom:10}}><span style={{fontWeight:600,color:T.ink}}>🍗 Pollo</span><Tag color={T.green}>Siempre incluido ✓</Tag></div>
-          <Field label="Otro (opcional)" style={{marginBottom:14}}><Inp value={menu.segundoPlatoOtro||""} onChange={v=>upd("segundoPlatoOtro",v)} placeholder="Ej: cerdo, vacío..."/></Field>
-          <Divider label="Postre — elegí uno"/>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{POSTRE_OPTS.map(o=><Chip key={o} label={o} selected={menu.postre===o} color={T.gold} onClick={()=>upd("postre",menu.postre===o?"":o)}/>)}</div>
-        </div>}
-      </SeccionBox>
-      <SeccionBox title="🌿 Menús especiales" color={T.green}>
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {ESPECIALES_OPTS.map(opt=>{
-            const sel=!!esp[opt];
-            return <div key={opt}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:sel?T.green+"12":T.bgDeep,border:`1.5px solid ${sel?T.green+"44":T.border}`,borderRadius:sel?`${R.field}px ${R.field}px 0 0`:R.field,padding:"10px 14px",transition:"all .18s"}}>
-                <span style={{fontWeight:600,color:sel?T.green:T.ink,fontSize:14}}>{opt}</span>
-                <Chip small label={sel?"✓ Activo":"+ Agregar"} selected={sel} color={T.green} onClick={()=>togEsp(opt)}/>
-              </div>
-              {sel&&<div style={{padding:"10px 14px",background:T.green+"08",border:`1px solid ${T.green}22`,borderTop:"none",borderRadius:`0 0 ${R.field}px ${R.field}px`}}>
-                <div style={{display:"grid",gridTemplateColumns:opt==="Otro"?"1fr 80px":"1fr",gap:8}}>
-                  {opt==="Otro"&&<Inp value={esp[opt]?.descripcion||""} onChange={v=>upd("especiales",{...esp,[opt]:{...esp[opt],descripcion:v}})} placeholder="Descripción..."/>}
-                  <Inp type="number" value={esp[opt]?.cantidad||""} onChange={v=>upd("especiales",{...esp,[opt]:{...esp[opt],cantidad:v}})} placeholder="¿Cuántas personas?"/>
-                </div>
-              </div>}
-            </div>;
-          })}
-        </div>
-      </SeccionBox>
-      <SeccionBox title="☕ Sobremesa" color={T.gold}>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{SOBREMESA_OPTS.map(o=>{const sel=(menu.sobremesa||[]).includes(o);return<Chip key={o} label={o} selected={sel} color={T.gold} onClick={()=>{const c=menu.sobremesa||[];upd("sobremesa",sel?c.filter(s=>s!==o):[...c,o]);}}/>;})}
-        </div>
-      </SeccionBox>
-      <SeccionBox title="🍷 Bebidas" color={T.violet}>
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {[{k:"gaseosa",l:"🥤 Gaseosa"},{k:"cervezaLibre",l:"🍺 Cerveza libre"}].map(({k,l})=>(
-            <div key={k} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:T.bgDeep,borderRadius:R.field,padding:"10px 14px"}}>
-              <span style={{fontWeight:600,color:T.ink}}>{l}</span>
-              <div style={{display:"flex",gap:8}}>{["Sí","No"].map(op=><Chip key={op} small label={op} selected={beb[k]===op} color={op==="Sí"?T.green:T.red} onClick={()=>updBeb(k,op)}/>)}</div>
-            </div>
-          ))}
-          <div>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:T.bgDeep,borderRadius:beb.cervezaCajones==="Sí"?`${R.field}px ${R.field}px 0 0`:R.field,padding:"10px 14px"}}>
-              <span style={{fontWeight:600,color:T.ink}}>📦 Cerveza cajones</span>
-              <div style={{display:"flex",gap:8}}>{["Sí","No"].map(op=><Chip key={op} small label={op} selected={beb.cervezaCajones===op} color={op==="Sí"?T.green:T.red} onClick={()=>updBeb("cervezaCajones",op)}/>)}</div>
-            </div>
-            {beb.cervezaCajones==="Sí"&&<div style={{padding:"12px 14px",background:T.green+"08",border:`1px solid ${T.green}22`,borderTop:"none",borderRadius:`0 0 ${R.field}px ${R.field}px`,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              <Field label="Cajones"><Inp type="number" value={beb.cervezaCajonesCant||""} onChange={v=>updBeb("cervezaCajonesCant",v)} placeholder="Ej: 3"/></Field>
-              <Field label="Marca"><Inp value={beb.cervezaCajonesMarca||""} onChange={v=>updBeb("cervezaCajonesMarca",v)} placeholder="Ej: Quilmes"/></Field>
-            </div>}
-          </div>
-          <div>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:T.bgDeep,borderRadius:beb.barraTragos==="Sí"?`${R.field}px ${R.field}px 0 0`:R.field,padding:"10px 14px"}}>
-              <span style={{fontWeight:600,color:T.ink}}>🍹 Barra de tragos</span>
-              <div style={{display:"flex",gap:8}}>{["Sí","No"].map(op=><Chip key={op} small label={op} selected={beb.barraTragos===op} color={op==="Sí"?T.green:T.red} onClick={()=>updBeb("barraTragos",op)}/>)}</div>
-            </div>
-            {beb.barraTragos==="Sí"&&<div style={{padding:"12px 14px",background:T.violet+"08",border:`1px solid ${T.violet}22`,borderTop:"none",borderRadius:`0 0 ${R.field}px ${R.field}px`}}>
-              <Field label="Modalidad">
-                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{["Barra libre","Por tandas"].map(op=><Chip key={op} label={op} selected={beb.barraModalidad===op} color={T.violet} onClick={()=>updBeb("barraModalidad",op)}/>)}</div>
-                {beb.barraModalidad==="Por tandas"&&<Inp type="number" value={beb.barraTandas||""} onChange={v=>updBeb("barraTandas",v)} placeholder="¿Cuántas tandas?" style={{marginTop:8}}/>}
-              </Field>
-            </div>}
-          </div>
-        </div>
-      </SeccionBox>
-    </div>
-  );
-}
+const upd=(k,v)=>setMenu(m=>({…m,[k]:v}));
+const tm=menu.tipoMenu||””,esp=menu.especiales||{},beb=menu.bebidas||{};
+const togEsp=o=>{const n={…esp};if(n[o])delete n[o];else n[o]={activo:true,cantidad:””};upd(“especiales”,n);};
+const ub=(k,v)=>upd(“bebidas”,{…beb,[k]:v});
+return <div style={{display:“flex”,flexDirection:“column”,gap:8,marginTop:8}}>
+<SeccionBox title="🥂 Recepción" color={T.gold} defaultOpen>
+<Field label="Detalle"><Inp value={menu.recepcion||””} onChange={v=>upd(“recepcion”,v)} placeholder=“Ej: bocaditos, brindis…”/></Field>
+</SeccionBox>
+<SeccionBox title="🍽️ Tipo de menú" color={T.blue}>
+<Field label="Seleccioná" style={{marginBottom:8}}>
+<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
+{[{v:“Campestre”,c:T.green},{v:“Con platos”,c:T.blue}].map(o=><Chip key={o.v} label={o.v} selected={tm===o.v} color={o.c} onClick={()=>upd(“tipoMenu”,tm===o.v?””:o.v)}/>)}
+</div>
+</Field>
+{tm===“Campestre”&&<div style={{marginTop:12}}>
+<Divider label="Ítems campestre"/>
+{[“Entrada”,“Picada”,“Empanadas”,“Carnes”,“Ensalada”,“Papas fritas”].map(it=>(
+<div key={it} style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:R.field,padding:“12px 14px”,marginBottom:8,minHeight:52}}>
+<span style={{fontWeight:600,color:T.ink,fontSize:14}}>{it}</span>
+<div style={{display:“flex”,gap:8}}>{[“Sí”,“No”].map(op=><Chip key={op} small label={op} selected={(menu.campestre||{})[it]===op} color={op===“Sí”?T.green:T.red} onClick={()=>upd(“campestre”,{…(menu.campestre||{}),[it]:op})}/>)}</div>
+</div>
+))}
+<Field label="Postre">
+<div style={{display:“flex”,gap:8,flexWrap:“wrap”,marginTop:4}}>
+{CAMP_POSTRE.map(o=><Chip key={o} label={o} selected={(menu.campestre||{}).postre===o} color={T.gold} onClick={()=>upd(“campestre”,{…(menu.campestre||{}),postre:o})}/>)}
+</div>
+</Field>
+</div>}
+{tm===“Con platos”&&<div style={{marginTop:12}}>
+<Divider label="Primer plato — elegí uno"/>
+<div style={{display:“flex”,gap:8,flexWrap:“wrap”,marginBottom:12}}>
+{PRIMER_PLATO.map(o=><Chip key={o} label={o} selected={menu.primerPlato===o} color={T.blue} onClick={()=>upd(“primerPlato”,menu.primerPlato===o?””:o)}/>)}
+</div>
+<Divider label="Segundo plato"/>
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:R.field,padding:“12px 14px”,marginBottom:10,minHeight:52}}>
+<span style={{fontWeight:600,color:T.ink}}>🍗 Pollo</span><Tag color={T.green}>Siempre ✓</Tag>
+</div>
+<Field label="Otro" style={{marginBottom:12}}><Inp value={menu.segundoPlatoOtro||””} onChange={v=>upd(“segundoPlatoOtro”,v)} placeholder=“Ej: cerdo, vacío…”/></Field>
+<Divider label="Postre — elegí uno"/>
+<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
+{POSTRE.map(o=><Chip key={o} label={o} selected={menu.postre===o} color={T.gold} onClick={()=>upd(“postre”,menu.postre===o?””:o)}/>)}
+</div>
+</div>}
+</SeccionBox>
+<SeccionBox title="🌿 Menús especiales" color={T.green}>
+<div style={{display:“flex”,flexDirection:“column”,gap:8}}>
+{ESPECIALES.map(opt=>{
+const sel=!!esp[opt];
+return <div key={opt}>
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:sel?T.green+“12”:T.bgDeep,border:`1.5px solid ${sel?T.green+"44":T.border}`,borderRadius:sel?`${R.field}px ${R.field}px 0 0`:R.field,padding:“12px 14px”,minHeight:52}}>
+<span style={{fontWeight:600,color:sel?T.green:T.ink,fontSize:14}}>{opt}</span>
+<Chip small label={sel?“✓ Activo”:”+ Agregar”} selected={sel} color={T.green} onClick={()=>togEsp(opt)}/>
+</div>
+{sel&&<div style={{padding:“10px 14px”,background:T.green+“08”,border:`1px solid ${T.green}22`,borderTop:“none”,borderRadius:`0 0 ${R.field}px ${R.field}px`}}>
+<div style={{display:“grid”,gridTemplateColumns:opt===“Otro”?“1fr 90px”:“1fr”,gap:8}}>
+{opt===“Otro”&&<Inp value={esp[opt]?.descripcion||””} onChange={v=>upd(“especiales”,{…esp,[opt]:{…esp[opt],descripcion:v}})} placeholder=“Descripción…”/>}
+<Inp type=“number” value={esp[opt]?.cantidad||””} onChange={v=>upd(“especiales”,{…esp,[opt]:{…esp[opt],cantidad:v}})} placeholder=”¿Cuántas personas?”/>
+</div>
+</div>}
+</div>;
+})}
+</div>
+</SeccionBox>
+<SeccionBox title="☕ Sobremesa" color={T.gold}>
+<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
+{SOBREMESA.map(o=>{const sel=(menu.sobremesa||[]).includes(o);return<Chip key={o} label={o} selected={sel} color={T.gold} onClick={()=>{const c=menu.sobremesa||[];upd(“sobremesa”,sel?c.filter(s=>s!==o):[…c,o]);}}/>;})}
+</div>
+</SeccionBox>
+<SeccionBox title="🍷 Bebidas" color={T.violet}>
+<div style={{display:“flex”,flexDirection:“column”,gap:10}}>
+{[{k:“gaseosa”,l:“🥤 Gaseosa”},{k:“cervezaLibre”,l:“🍺 Cerveza libre”}].map(({k,l})=>(
+<div key={k} style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:R.field,padding:“12px 14px”,minHeight:52}}>
+<span style={{fontWeight:600,color:T.ink}}>{l}</span>
+<div style={{display:“flex”,gap:8}}>{[“Sí”,“No”].map(op=><Chip key={op} small label={op} selected={beb[k]===op} color={op===“Sí”?T.green:T.red} onClick={()=>ub(k,op)}/>)}</div>
+</div>
+))}
+<div>
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:beb.cervezaCajones===“Sí”?`${R.field}px ${R.field}px 0 0`:R.field,padding:“12px 14px”,minHeight:52}}>
+<span style={{fontWeight:600,color:T.ink}}>📦 Cerveza cajones</span>
+<div style={{display:“flex”,gap:8}}>{[“Sí”,“No”].map(op=><Chip key={op} small label={op} selected={beb.cervezaCajones===op} color={op===“Sí”?T.green:T.red} onClick={()=>ub(“cervezaCajones”,op)}/>)}</div>
+</div>
+{beb.cervezaCajones===“Sí”&&<div style={{padding:“12px 14px”,background:T.green+“08”,border:`1px solid ${T.green}22`,borderTop:“none”,borderRadius:`0 0 ${R.field}px ${R.field}px`,display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:10}}>
+<Field label="Cajones"><Inp type=“number” value={beb.cervezaCajonesCant||””} onChange={v=>ub(“cervezaCajonesCant”,v)} placeholder=“Ej: 3”/></Field>
+<Field label="Marca"><Inp value={beb.cervezaCajonesMarca||””} onChange={v=>ub(“cervezaCajonesMarca”,v)} placeholder=“Ej: Quilmes”/></Field>
+</div>}
+</div>
+<div>
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,background:T.bgDeep,borderRadius:beb.barraTragos===“Sí”?`${R.field}px ${R.field}px 0 0`:R.field,padding:“12px 14px”,minHeight:52}}>
+<span style={{fontWeight:600,color:T.ink}}>🍹 Barra de tragos</span>
+<div style={{display:“flex”,gap:8}}>{[“Sí”,“No”].map(op=><Chip key={op} small label={op} selected={beb.barraTragos===op} color={op===“Sí”?T.green:T.red} onClick={()=>ub(“barraTragos”,op)}/>)}</div>
+</div>
+{beb.barraTragos===“Sí”&&<div style={{padding:“12px 14px”,background:T.violet+“08”,border:`1px solid ${T.violet}22`,borderTop:“none”,borderRadius:`0 0 ${R.field}px ${R.field}px`}}>
+<Field label="Modalidad">
+<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
+{[“Barra libre”,“Por tandas”].map(op=><Chip key={op} label={op} selected={beb.barraModalidad===op} color={T.violet} onClick={()=>ub(“barraModalidad”,op)}/>)}
+</div>
+{beb.barraModalidad===“Por tandas”&&<Inp type=“number” value={beb.barraTandas||””} onChange={v=>ub(“barraTandas”,v)} placeholder=”¿Cuántas tandas?” style={{marginTop:8}}/>}
+</Field>
+</div>}
+</div>
+</div>
+</SeccionBox>
 
-// ── LOGIN ─────────────────────────────────────────────────────────────────────
-function Login({onLogin}) {
-  const [flip,setFlip]=useState(null);
-  return (
-    <div style={{minHeight:"100vh",background:`radial-gradient(ellipse at 50% 0%,#1d2d50 0%,${T.bg} 65%)`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24}}>
-      <div style={{textAlign:"center",marginBottom:56}}>
-        <div style={{fontSize:44,marginBottom:10,filter:"drop-shadow(0 0 24px #818cf8aa)"}}>✦</div>
-        <div style={{fontSize:42,fontWeight:900,color:T.blue,letterSpacing:4,textShadow:`0 0 40px ${T.blueGlow}`}}>SalónPro</div>
-        <div style={{color:T.inkMid,fontSize:14,marginTop:8,letterSpacing:2}}>SISTEMA DE GESTIÓN DE EVENTOS</div>
-      </div>
-      <div style={{display:"flex",gap:28,flexWrap:"wrap",justifyContent:"center"}}>
-        {USERS.map(u=>(
-          <div key={u.id} className={`flip-card${flip===u.id?" flipped":""}`}
-            onMouseEnter={()=>setFlip(u.id)} onMouseLeave={()=>setFlip(null)}
-            onClick={()=>setFlip(f=>f===u.id?null:u.id)}>
-            <div className="flip-inner">
-              {/* BACK */}
-              <div className="flip-back" style={{background:`linear-gradient(135deg,${u.color}22,${u.color}08)`,border:`1.5px solid ${u.color}66`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,boxShadow:`0 0 32px ${u.color}44`}}>
-                <div style={{fontSize:56,filter:`drop-shadow(0 0 16px ${u.color})`}}>{u.avatar}</div>
-                <div style={{fontSize:18,fontWeight:800,color:u.color,letterSpacing:1}}>{u.name}</div>
-                <div style={{fontSize:12,color:T.inkMid,letterSpacing:1,textTransform:"uppercase"}}>{u.role}</div>
-                <button onClick={e=>{e.stopPropagation();onLogin(u);}} style={{marginTop:8,background:u.color,color:T.bgDeep,border:"none",borderRadius:R.btn,padding:"10px 28px",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"inherit",boxShadow:`0 0 20px ${u.color}88`}}>Ingresar</button>
-              </div>
-              {/* FRONT */}
-              <div className="flip-front" style={{background:T.bgCard,border:`1.5px solid ${T.border}`,overflow:"hidden",boxShadow:"0 4px 24px #00000060"}}>
-                <div style={{position:"absolute",top:-40,left:-40,width:140,height:140,borderRadius:"50%",background:u.color+"18",filter:"blur(2px)"}}/>
-                <div style={{position:"absolute",top:-20,right:-30,width:100,height:100,borderRadius:"50%",background:u.color+"12",filter:"blur(4px)"}}/>
-                <div style={{position:"absolute",bottom:-30,left:"50%",transform:"translateX(-50%)",width:120,height:120,borderRadius:"50%",background:u.color+"10",filter:"blur(6px)"}}/>
-                <div style={{position:"relative",zIndex:1,height:"100%",display:"flex",flexDirection:"column",justifyContent:"flex-end",padding:"20px 18px 22px"}}>
-                  <div style={{position:"absolute",top:28,left:"50%",transform:"translateX(-50%)",fontSize:54,filter:`drop-shadow(0 0 10px ${u.color}66)`}}>{u.avatar}</div>
-                  <div style={{marginBottom:10}}><span style={{background:u.color+"22",color:u.color,border:`1px solid ${u.color}44`,borderRadius:R.badge,padding:"3px 10px",fontSize:11,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>{u.role}</span></div>
-                  <div style={{fontWeight:800,fontSize:20,color:T.inkBright,marginBottom:6}}>{u.name}</div>
-                  <div style={{fontSize:12,color:T.inkMid}}>Pasá el cursor →</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{color:T.inkLight,fontSize:12,marginTop:40,letterSpacing:1}}>Pasá el cursor sobre tu perfil para ingresar</div>
-    </div>
-  );
+  </div>;
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 function Dashboard({data,user}) {
-  const hoy=new Date().toISOString().split("T")[0];
-  const proximos=data.eventos.filter(e=>e.fecha>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha));
-  const stockBajo=STOCK_CATS.flatMap(c=>(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).map(s=>({...s,catLabel:c.label,catColor:c.color})));
-  const faltPend=data.faltantes.filter(f=>!f.pedido);
-  const faltUrg=faltPend.filter(f=>f.urgencia==="alta");
-  return(
-    <div>
-      <div style={{background:`linear-gradient(135deg,${user.color}15,${user.color}05)`,border:`1px solid ${user.color}30`,borderRadius:R.card,padding:"20px 24px",marginBottom:24,display:"flex",alignItems:"center",gap:16}}>
-        <div style={{fontSize:42,filter:`drop-shadow(0 0 10px ${user.color}88)`}}>{user.avatar}</div>
-        <div>
-          <div style={{fontSize:22,fontWeight:800,color:user.color}}>Hola, {user.name} 👋</div>
-          <div style={{color:T.inkMid,fontSize:13,marginTop:2}}>{new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</div>
-        </div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:24}}>
-        {[
-          {icon:"🎉",n:proximos.length,label:"Próximos",sub:`${data.eventos.length} total`,color:T.blue,glow:T.blueGlow},
-          {icon:"📦",n:stockBajo.length,label:"Stock bajo",sub:stockBajo.length===0?"Todo OK ✓":"Revisar",color:stockBajo.length>0?T.red:T.green,glow:stockBajo.length>0?T.redGlow:T.greenGlow},
-          {icon:"🛒",n:faltPend.length,label:"Faltantes",sub:faltUrg.length>0?`${faltUrg.length} urgentes`:"Sin urgentes",color:faltUrg.length>0?T.red:T.inkMid,glow:faltUrg.length>0?T.redGlow:"none"},
-        ].map(s=>(
-          <div key={s.label} style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:R.card,padding:"18px 16px",boxShadow:`0 0 20px ${s.glow}`}}>
-            <div style={{fontSize:22,marginBottom:6}}>{s.icon}</div>
-            <div style={{fontSize:34,fontWeight:900,color:s.color,lineHeight:1,textShadow:`0 0 20px ${s.color}66`}}>{s.n}</div>
-            <div style={{color:T.inkMid,fontSize:13,fontWeight:600,marginTop:4}}>{s.label}</div>
-            <div style={{color:T.inkLight,fontSize:11,marginTop:2}}>{s.sub}</div>
-          </div>
-        ))}
-      </div>
-      {proximos.length>0&&(<>
-        <Divider label="Próximos eventos"/>
-        {proximos.slice(0,3).map(e=>{
-          const tipo=TIPO_EVENTO.find(t=>t.v===e.tipo);
-          const dias=Math.ceil((new Date(e.fecha+"T12:00:00")-new Date())/86400000);
-          return(<Card key={e.id} accent={tipo?.color||T.blue} style={{marginBottom:10}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-              <div>
-                <div style={{fontWeight:700,fontSize:16,color:T.inkBright,marginBottom:4}}>{e.cliente}</div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Tag color={tipo?.color||T.blue}>{tipo?.l}</Tag>{e.invitados&&<Tag color={T.cyan}>👥 {e.invitados}</Tag>}</div>
-              </div>
-              <div style={{textAlign:"right"}}>
-                <div style={{fontSize:18,fontWeight:700,color:T.blue}}>{new Date(e.fecha+"T12:00:00").toLocaleDateString("es-AR",{day:"2-digit",month:"short"})}</div>
-                <div style={{color:dias<=3?T.red:T.inkLight,fontSize:12,fontWeight:dias<=3?700:400}}>{dias===0?"¡Hoy!":dias===1?"Mañana":`en ${dias} días`}</div>
-              </div>
-            </div>
-          </Card>);
-        })}
-      </>)}
-      {stockBajo.length>0&&(<><Divider label="⚠️ Alertas de stock"/>{stockBajo.map((s,i)=><Card key={i} accent={T.red} style={{marginBottom:8}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontWeight:700,color:T.inkBright}}>{s.nombre}</span><Tag color={s.catColor}>{s.catLabel}</Tag></div><span style={{color:T.red,fontWeight:800}}>{s.cantidad}/{s.minimo} {s.unidad}</span></div></Card>)}</>)}
-      {data.eventos.length===0&&stockBajo.length===0&&faltPend.length===0&&<div style={{textAlign:"center",paddingTop:60,color:T.inkLight}}><div style={{fontSize:52,marginBottom:12}}>🎊</div><div style={{fontSize:20,fontWeight:700,color:T.inkMid}}>¡Todo en orden!</div><div style={{fontSize:14,marginTop:4}}>Empezá cargando eventos o stock.</div></div>}
-    </div>
-  );
+const hoy=new Date().toISOString().split(“T”)[0];
+const prox=data.eventos.filter(e=>e.fecha>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+const bajo=STOCK_CATS.flatMap(c=>(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).map(s=>({…s,cl:c.label,cc:c.color})));
+const fp=data.faltantes.filter(f=>!f.pedido);
+const fu=fp.filter(f=>f.urgencia===“alta”);
+return <div>
+<div style={{background:`linear-gradient(135deg,${user.color}18,${user.color}05)`,border:`1px solid ${user.color}30`,borderRadius:R.card,padding:“18px 20px”,marginBottom:20,display:“flex”,alignItems:“center”,gap:14}}>
+<div style={{fontSize:40,filter:`drop-shadow(0 0 10px ${user.color}88)`}}>{user.avatar}</div>
+<div>
+<div style={{fontSize:20,fontWeight:800,color:user.color}}>Hola, {user.name} 👋</div>
+<div style={{color:T.inkMid,fontSize:13,marginTop:2}}>{new Date().toLocaleDateString(“es-AR”,{weekday:“long”,day:“numeric”,month:“long”})}</div>
+</div>
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“repeat(3,1fr)”,gap:10,marginBottom:20}}>
+{[
+{icon:“🎉”,n:prox.length,label:“Próximos”,sub:`${data.eventos.length} total`,color:T.blue,glow:T.blueGlow},
+{icon:“📦”,n:bajo.length,label:“Stock bajo”,sub:bajo.length===0?“OK ✓”:“Revisar”,color:bajo.length>0?T.red:T.green,glow:bajo.length>0?T.redGlow:T.greenGlow},
+{icon:“🛒”,n:fp.length,label:“Faltantes”,sub:fu.length>0?`${fu.length} urg.`:“Sin urg.”,color:fu.length>0?T.red:T.inkMid,glow:fu.length>0?T.redGlow:“none”},
+].map(s=><div key={s.label} style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:R.card,padding:“14px 12px”,boxShadow:`0 0 16px ${s.glow}`}}>
+<div style={{fontSize:20,marginBottom:4}}>{s.icon}</div>
+<div style={{fontSize:30,fontWeight:900,color:s.color,lineHeight:1,textShadow:`0 0 16px ${s.color}66`}}>{s.n}</div>
+<div style={{color:T.inkMid,fontSize:12,fontWeight:600,marginTop:4}}>{s.label}</div>
+<div style={{color:T.inkLight,fontSize:10,marginTop:2}}>{s.sub}</div>
+</div>)}
+</div>
+{prox.length>0&&<><Divider label="Próximos eventos"/>
+{prox.slice(0,3).map(e=>{
+const tipo=TIPO_EVENTO.find(t=>t.v===e.tipo);
+const dias=Math.ceil((new Date(e.fecha+“T12:00:00”)-new Date())/86400000);
+return <Card key={e.id} accent={tipo?.color||T.blue} style={{marginBottom:10}}>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,flexWrap:“wrap”,gap:8}}>
+<div>
+<div style={{fontWeight:700,fontSize:15,color:T.inkBright,marginBottom:4}}>{e.cliente}</div>
+<div style={{display:“flex”,gap:6,flexWrap:“wrap”}}><Tag color={tipo?.color||T.blue}>{tipo?.l}</Tag>{e.invitados&&<Tag color={T.cyan}>👥 {e.invitados}</Tag>}</div>
+</div>
+<div style={{textAlign:“right”}}>
+<div style={{fontSize:17,fontWeight:700,color:T.blue}}>{new Date(e.fecha+“T12:00:00”).toLocaleDateString(“es-AR”,{day:“2-digit”,month:“short”})}</div>
+<div style={{color:dias<=3?T.red:T.inkLight,fontSize:12,fontWeight:dias<=3?700:400}}>{dias===0?”¡Hoy!”:dias===1?“Mañana”:`${dias}d`}</div>
+</div>
+</div>
+</Card>;
+})}
+</>}
+{bajo.length>0&&<><Divider label="⚠️ Stock bajo"/>
+{bajo.map((s,i)=><Card key={i} accent={T.red} style={{marginBottom:8}}>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”}}>
+<div style={{display:“flex”,gap:8,alignItems:“center”}}><span style={{fontWeight:700,color:T.inkBright,fontSize:14}}>{s.nombre}</span><Tag color={s.cc}>{s.cl}</Tag></div>
+<span style={{color:T.red,fontWeight:800,fontSize:13}}>{s.cantidad}/{s.minimo} {s.unidad}</span>
+</div>
+</Card>)}
+</>}
+{data.eventos.length===0&&bajo.length===0&&fp.length===0&&<div style={{textAlign:“center”,paddingTop:60,color:T.inkLight}}>
+<div style={{fontSize:48,marginBottom:12}}>🎊</div>
+<div style={{fontSize:18,fontWeight:700,color:T.inkMid}}>¡Todo en orden!</div>
+<div style={{fontSize:13,marginTop:4}}>Empezá cargando eventos o stock.</div>
+</div>}
+
+  </div>;
 }
 
 // ── EVENTOS ───────────────────────────────────────────────────────────────────
 function Eventos({data,setData,user}) {
-  const empty={cliente:"",telefono:"",fecha:"",tipo:"",invitados:"",notas:""};
-  const [showForm,setShowForm]=useState(false);
-  const [form,setForm]=useState(empty);
-  const [mf,setMf]=useState({});
-  const [emId,setEmId]=useState(null);
-  const [emData,setEmData]=useState({});
-  const hoy=new Date().toISOString().split("T")[0];
+const ef={cliente:””,telefono:””,fecha:””,tipo:””,invitados:””,notas:””};
+const [sf,setSf]=useState(false);
+const [form,setForm]=useState(ef);
+const [mf,setMf]=useState({});
+const [emId,setEmId]=useState(null);
+const [emD,setEmD]=useState({});
+const hoy=new Date().toISOString().split(“T”)[0];
 
-  const trash=ev=>setData(d=>({...d,eventos:d.eventos.filter(e=>e.id!==ev.id),papelera:[...(d.papelera||[]),{item:ev,tipo:"evento",eliminadoPor:user.name,fechaEliminacion:Date.now()}]}));
-  const guardar=()=>{
-    if(!form.fecha||!form.cliente||!form.tipo)return;
-    setData(d=>({...d,eventos:[...d.eventos,{...form,id:Date.now(),creadoPor:user.name,menu:mf}]}));
-    setForm(empty);setMf({});setShowForm(false);
-  };
-  const saveMenu=id=>{setData(d=>({...d,eventos:d.eventos.map(e=>e.id===id?{...e,menu:emData}:e)}));setEmId(null);};
+const trash=ev=>setData(d=>({…d,eventos:d.eventos.filter(e=>e.id!==ev.id),papelera:[…(d.papelera||[]),{item:ev,tipo:“evento”,eliminadoPor:user.name,fechaEliminacion:Date.now()}]}));
+const guardar=()=>{
+if(!form.fecha||!form.cliente||!form.tipo)return;
+setData(d=>({…d,eventos:[…d.eventos,{…form,id:Date.now(),creadoPor:user.name,menu:mf}]}));
+setForm(ef);setMf({});setSf(false);
+};
+const saveM=id=>{setData(d=>({…d,eventos:d.eventos.map(e=>e.id===id?{…e,menu:emD}:e)}));setEmId(null);};
+const prox=data.eventos.filter(e=>e.fecha>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+const pas=data.eventos.filter(e=>e.fecha<hoy).sort((a,b)=>b.fecha.localeCompare(a.fecha));
 
-  const proximos=data.eventos.filter(e=>e.fecha>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha));
-  const pasados=data.eventos.filter(e=>e.fecha<hoy).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+const ResM=({menu})=>{
+if(!menu||!Object.keys(menu).length)return<span style={{color:T.inkLight,fontSize:12}}>Sin menú</span>;
+const it=[];
+if(menu.tipoMenu)it.push(menu.tipoMenu);
+if(menu.primerPlato)it.push(menu.primerPlato);
+if(menu.postre)it.push(menu.postre);
+const ne=Object.keys(menu.especiales||{}).length;
+if(ne>0)it.push(`${ne} esp.`);
+return<span style={{color:T.inkMid,fontSize:12}}>{it.join(” · “)}</span>;
+};
 
-  const ResMenu=({menu})=>{
-    if(!menu||!Object.keys(menu).length)return<span style={{color:T.inkLight,fontSize:12}}>Sin menú</span>;
-    const it=[];
-    if(menu.tipoMenu)it.push(menu.tipoMenu);
-    if(menu.primerPlato)it.push(menu.primerPlato);
-    if(menu.postre)it.push(menu.postre);
-    const ne=Object.keys(menu.especiales||{}).length;
-    if(ne>0)it.push(`${ne} especial${ne>1?"es":""}`);
-    return<span style={{color:T.inkMid,fontSize:12}}>{it.join(" · ")}</span>;
-  };
+const EC=({ev,past})=>{
+const tipo=TIPO_EVENTO.find(t=>t.v===ev.tipo);
+const isEM=emId===ev.id;
+return<Card accent={past?T.border:(tipo?.color||T.blue)} style={{marginBottom:12}}>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“flex-start”,gap:10}}>
+<div style={{flex:1,minWidth:0}}>
+<div style={{display:“flex”,gap:8,alignItems:“center”,marginBottom:6,flexWrap:“wrap”}}>
+<span style={{fontWeight:700,fontSize:16,color:T.inkBright}}>{ev.cliente}</span>
+{tipo&&<Tag color={past?T.inkLight:tipo.color}>{tipo.l}</Tag>}
+{past&&<Tag color={T.inkLight}>Realizado</Tag>}
+</div>
+<div style={{display:“flex”,gap:12,flexWrap:“wrap”,color:T.inkMid,fontSize:13}}>
+<span>📅 {new Date(ev.fecha+“T12:00:00”).toLocaleDateString(“es-AR”,{day:“2-digit”,month:“long”,year:“numeric”})}</span>
+{ev.invitados&&<span>👥 {ev.invitados}</span>}
+</div>
+{ev.telefono&&<div style={{color:T.inkMid,fontSize:13,marginTop:2}}>📞 {ev.telefono}</div>}
+<div style={{marginTop:6}}><ResM menu={ev.menu}/></div>
+{ev.creadoPor&&<div style={{color:T.inkLight,fontSize:11,marginTop:4}}>Por {ev.creadoPor}</div>}
+</div>
+<div style={{display:“flex”,gap:8,alignItems:“center”,flexShrink:0}}>
+<Btn small variant=“outline” onClick={()=>{if(isEM){setEmId(null);return;}setEmId(ev.id);setEmD(ev.menu||{});}}>{isEM?“✕”:“🍽️”}</Btn>
+<TrashBtn onClick={()=>trash(ev)}/>
+</div>
+</div>
+{isEM&&<div style={{marginTop:14,borderTop:`1px solid ${T.border}`,paddingTop:14}}>
+<MenuForm menu={emD} setMenu={setEmD}/>
+<div style={{marginTop:14}}><Btn onClick={()=>saveM(ev.id)} full>💾 Guardar menú</Btn></div>
+</div>}
+</Card>;
+};
 
-  const EvCard=({ev,past})=>{
-    const tipo=TIPO_EVENTO.find(t=>t.v===ev.tipo);
-    const isEM=emId===ev.id;
-    return<Card accent={past?T.border:(tipo?.color||T.blue)} style={{marginBottom:12}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
-        <div style={{flex:1}}>
-          <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:6,flexWrap:"wrap"}}>
-            <span style={{fontWeight:700,fontSize:17,color:T.inkBright}}>{ev.cliente}</span>
-            {tipo&&<Tag color={past?T.inkLight:tipo.color}>{tipo.l}</Tag>}
-            {past&&<Tag color={T.inkLight}>Realizado</Tag>}
-          </div>
-          <div style={{display:"flex",gap:14,flexWrap:"wrap",color:T.inkMid,fontSize:13}}>
-            <span>📅 {new Date(ev.fecha+"T12:00:00").toLocaleDateString("es-AR",{day:"2-digit",month:"long",year:"numeric"})}</span>
-            {ev.invitados&&<span>👥 {ev.invitados} inv.</span>}
-            {ev.telefono&&<span>📞 {ev.telefono}</span>}
-          </div>
-          <div style={{marginTop:6}}><ResMenu menu={ev.menu}/></div>
-          {ev.creadoPor&&<div style={{color:T.inkLight,fontSize:11,marginTop:4}}>Por {ev.creadoPor}</div>}
-        </div>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <Btn small variant="outline" onClick={()=>{if(isEM){setEmId(null);return;}setEmId(ev.id);setEmData(ev.menu||{});}}>{isEM?"✕ Cerrar":"🍽️ Menú"}</Btn>
-          <TrashBtn onClick={()=>trash(ev)}/>
-        </div>
-      </div>
-      {isEM&&<div style={{marginTop:16,borderTop:`1px solid ${T.border}`,paddingTop:16}}><MenuForm menu={emData} setMenu={setEmData}/><div style={{marginTop:16}}><Btn onClick={()=>saveMenu(ev.id)}>💾 Guardar menú</Btn></div></div>}
-    </Card>;
-  };
+return<div>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:18}}>
+<div style={{fontSize:20,fontWeight:800,color:T.inkBright}}>🎉 Eventos</div>
+<Btn onClick={()=>{setSf(!sf);setForm(ef);setMf({});}}>{sf?“Cancelar”:”+ Nuevo”}</Btn>
+</div>
+{sf&&<Card style={{borderColor:T.blue+“44”,marginBottom:20}} glow={T.blueGlow}>
+<div style={{fontWeight:800,color:T.blue,marginBottom:14,fontSize:15}}>Nuevo evento</div>
+<Field label="Tipo de evento *" style={{marginBottom:14}}>
+<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>
+{TIPO_EVENTO.map(t=><Chip key={t.v} label={t.l} selected={form.tipo===t.v} color={t.color} onClick={()=>setForm(f=>({…f,tipo:f.tipo===t.v?””:t.v}))}/>)}
+</div>
+</Field>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}}>
+<Field label="Cliente *"><Inp value={form.cliente} onChange={v=>setForm(f=>({…f,cliente:v}))} placeholder=“Nombre”/></Field>
+<Field label="Teléfono"><Inp value={form.telefono} onChange={v=>setForm(f=>({…f,telefono:v}))} placeholder=“Teléfono”/></Field>
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}}>
+<Field label="Fecha *"><Inp type=“date” value={form.fecha} onChange={v=>setForm(f=>({…f,fecha:v}))}/></Field>
+<Field label="Invitados"><Inp type=“number” value={form.invitados} onChange={v=>setForm(f=>({…f,invitados:v}))} placeholder=“Ej: 200”/></Field>
+</div>
+<Field label="Notas" style={{marginBottom:14}}><Inp value={form.notas} onChange={v=>setForm(f=>({…f,notas:v}))} placeholder=“Observaciones…”/></Field>
+<Divider label="Menú del evento"/>
+<MenuForm menu={mf} setMenu={setMf}/>
+<div style={{marginTop:14}}>
+<Btn full onClick={guardar} style={{opacity:(!form.cliente||!form.fecha||!form.tipo)?.5:1}}>Guardar evento</Btn>
+</div>
+</Card>}
+{prox.length>0&&<><Divider label="Próximos"/>{prox.map(e=><EC key={e.id} ev={e}/>)}</>}
+{pas.length>0&&<><Divider label="Realizados"/>{pas.map(e=><EC key={e.id} ev={e} past/>)}</>}
+{data.eventos.length===0&&<div style={{textAlign:“center”,paddingTop:60,color:T.inkLight}}><div style={{fontSize:44,marginBottom:12}}>🎉</div><div style={{fontSize:18,fontWeight:700,color:T.inkMid}}>No hay eventos aún.</div></div>}
 
-  return<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-      <div style={{fontSize:22,fontWeight:800,color:T.inkBright}}>🎉 Eventos</div>
-      <Btn onClick={()=>{setShowForm(!showForm);setForm(empty);setMf({});}}>{showForm?"Cancelar":"+ Nuevo evento"}</Btn>
-    </div>
-    {showForm&&<Card style={{borderColor:T.blue+"44",marginBottom:24}} glow={T.blueGlow}>
-      <div style={{fontWeight:800,color:T.blue,marginBottom:16,fontSize:16}}>Nuevo evento</div>
-      <Field label="Tipo de evento *" style={{marginBottom:16}}>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>{TIPO_EVENTO.map(t=><Chip key={t.v} label={t.l} selected={form.tipo===t.v} color={t.color} onClick={()=>setForm(f=>({...f,tipo:f.tipo===t.v?"":t.v}))}/>)}</div>
-      </Field>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
-        <Field label="Cliente *"><Inp value={form.cliente} onChange={v=>setForm(f=>({...f,cliente:v}))} placeholder="Nombre del cliente"/></Field>
-        <Field label="Teléfono"><Inp value={form.telefono} onChange={v=>setForm(f=>({...f,telefono:v}))} placeholder="Teléfono"/></Field>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
-        <Field label="Fecha *"><Inp type="date" value={form.fecha} onChange={v=>setForm(f=>({...f,fecha:v}))}/></Field>
-        <Field label="Invitados"><Inp type="number" value={form.invitados} onChange={v=>setForm(f=>({...f,invitados:v}))} placeholder="Ej: 200"/></Field>
-      </div>
-      <Field label="Notas" style={{marginBottom:16}}><Inp value={form.notas} onChange={v=>setForm(f=>({...f,notas:v}))} placeholder="Observaciones..."/></Field>
-      <Divider label="Menú del evento"/>
-      <MenuForm menu={mf} setMenu={setMf}/>
-      <div style={{marginTop:16}}><Btn onClick={guardar} style={{opacity:(!form.cliente||!form.fecha||!form.tipo)?.5:1}}>Guardar evento</Btn></div>
-    </Card>}
-    {proximos.length>0&&<><Divider label="Próximos"/>{proximos.map(e=><EvCard key={e.id} ev={e}/>)}</>}
-    {pasados.length>0&&<><Divider label="Realizados"/>{pasados.map(e=><EvCard key={e.id} ev={e} past/>)}</>}
-    {data.eventos.length===0&&<div style={{textAlign:"center",paddingTop:60,color:T.inkLight}}><div style={{fontSize:48,marginBottom:12}}>🎉</div><div style={{fontSize:20,fontWeight:700,color:T.inkMid}}>No hay eventos aún.</div></div>}
   </div>;
 }
 
 // ── STOCK ─────────────────────────────────────────────────────────────────────
 function Stock({data,setData,user}) {
-  const [cat,setCat]=useState("cocina");
-  const [showForm,setShowForm]=useState(false);
-  const [form,setForm]=useState({nombre:"",cantidad:"",unidad:"unidades",minimo:""});
-  const [editId,setEditId]=useState(null);
-  const [busqueda,setBusqueda]=useState("");
-  const ci=STOCK_CATS.find(c=>c.id===cat);
-  const items=(data.stock[cat]||[]).filter(s=>s.nombre.toLowerCase().includes(busqueda.toLowerCase()));
+const [cat,setCat]=useState(“cocina”);
+const [sf,setSf]=useState(false);
+const [form,setForm]=useState({nombre:””,cantidad:””,unidad:“unidades”,minimo:””});
+const [eid,setEid]=useState(null);
+const [bus,setBus]=useState(””);
+const ci=STOCK_CATS.find(c=>c.id===cat);
+const items=(data.stock[cat]||[]).filter(s=>s.nombre.toLowerCase().includes(bus.toLowerCase()));
 
-  const trash=item=>setData(d=>({...d,stock:{...d.stock,[cat]:d.stock[cat].filter(s=>s.id!==item.id)},papelera:[...(d.papelera||[]),{item:{...item,_cat:cat},tipo:"stock",eliminadoPor:user.name,fechaEliminacion:Date.now()}]}));
-  const guardar=()=>{
-    if(!form.nombre||!form.cantidad)return;
-    if(editId){setData(d=>({...d,stock:{...d.stock,[cat]:d.stock[cat].map(s=>s.id===editId?{...form,id:editId}:s)}}));setEditId(null);}
-    else{setData(d=>({...d,stock:{...d.stock,[cat]:[...(d.stock[cat]||[]),{...form,id:Date.now(),cargadoPor:user.name}]}}));}
-    setForm({nombre:"",cantidad:"",unidad:"unidades",minimo:""});setShowForm(false);
-  };
-  const editar=i=>{setForm(i);setEditId(i.id);setShowForm(true);};
-  const ajustar=(id,d)=>setData(dd=>({...dd,stock:{...dd.stock,[cat]:dd.stock[cat].map(s=>s.id===id?{...s,cantidad:String(Math.max(0,Number(s.cantidad)+d))}:s)}}));
+const trash=item=>setData(d=>({…d,stock:{…d.stock,[cat]:d.stock[cat].filter(s=>s.id!==item.id)},papelera:[…(d.papelera||[]),{item:{…item,_cat:cat},tipo:“stock”,eliminadoPor:user.name,fechaEliminacion:Date.now()}]}));
+const guardar=()=>{
+if(!form.nombre||!form.cantidad)return;
+if(eid){setData(d=>({…d,stock:{…d.stock,[cat]:d.stock[cat].map(s=>s.id===eid?{…form,id:eid}:s)}}));setEid(null);}
+else{setData(d=>({…d,stock:{…d.stock,[cat]:[…(d.stock[cat]||[]),{…form,id:Date.now(),cargadoPor:user.name}]}}));}
+setForm({nombre:””,cantidad:””,unidad:“unidades”,minimo:””});setSf(false);
+};
+const editar=i=>{setForm(i);setEid(i.id);setSf(true);};
+const aj=(id,d)=>setData(dd=>({…dd,stock:{…dd.stock,[cat]:dd.stock[cat].map(s=>s.id===id?{…s,cantidad:String(Math.max(0,Number(s.cantidad)+d))}:s)}}));
 
-  return<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-      <div style={{fontSize:22,fontWeight:800,color:T.inkBright}}>📦 Stock</div>
-      <Btn onClick={()=>{setShowForm(!showForm);setEditId(null);setForm({nombre:"",cantidad:"",unidad:"unidades",minimo:""}); }}>{showForm&&!editId?"Cancelar":"+ Agregar"}</Btn>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
-      {STOCK_CATS.map(c=>{
-        const bajo=(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).length;
-        const sel=cat===c.id;
-        return<button key={c.id} onClick={()=>{setCat(c.id);setShowForm(false);setBusqueda("");}} style={{background:sel?c.color+"22":T.bgCard,color:sel?c.color:T.inkMid,border:`1.5px solid ${sel?c.color:T.border}`,borderRadius:R.card,padding:"14px 10px",fontWeight:700,fontSize:14,cursor:"pointer",position:"relative",transition:"all .2s",boxShadow:sel?`0 0 20px ${c.color}33`:"none",transform:sel?"translateY(-2px)":"none",fontFamily:"inherit"}}>
-          <div style={{fontSize:22,marginBottom:4}}>{c.label.split(" ")[0]}</div>
-          <div style={{fontSize:13}}>{c.label.split(" ").slice(1).join(" ")}</div>
-          <div style={{fontSize:11,marginTop:4,opacity:.7}}>{(data.stock[c.id]||[]).length} productos</div>
-          {bajo>0&&<span style={{position:"absolute",top:-6,right:-6,background:T.red,color:"#fff",borderRadius:R.badge,width:20,height:20,fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{bajo}</span>}
-        </button>;
-      })}
-    </div>
-    {showForm&&<Card style={{borderColor:ci.color+"44",marginBottom:20}} glow={ci.color+"22"}>
-      <div style={{fontWeight:800,color:ci.color,marginBottom:14}}>{editId?"Editar":`Nuevo — ${ci.label}`}</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
-        <Field label="Producto *"><Inp value={form.nombre} onChange={v=>setForm(f=>({...f,nombre:v}))} placeholder="Nombre"/></Field>
-        <Field label="Unidad"><Sel value={form.unidad} onChange={v=>setForm(f=>({...f,unidad:v}))} options={[{v:"unidades",l:"Unidades"},{v:"kg",l:"Kg"},{v:"litros",l:"Litros"},{v:"cajas",l:"Cajas"},{v:"paquetes",l:"Paquetes"}]}/></Field>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
-        <Field label="Cantidad *"><Inp type="number" value={form.cantidad} onChange={v=>setForm(f=>({...f,cantidad:v}))} placeholder="Ej: 24"/></Field>
-        <Field label="Mínimo alerta"><Inp type="number" value={form.minimo} onChange={v=>setForm(f=>({...f,minimo:v}))} placeholder="Ej: 5"/></Field>
-      </div>
-      <div style={{display:"flex",gap:8}}>
-        <Btn onClick={guardar}>{editId?"Actualizar":"Guardar"}</Btn>
-        {editId&&<Btn variant="ghost" onClick={()=>{setShowForm(false);setEditId(null);}}>Cancelar</Btn>}
-      </div>
-    </Card>}
-    <Inp value={busqueda} onChange={setBusqueda} placeholder={`🔍 Buscar en ${ci.label}...`} style={{marginBottom:14}}/>
-    {items.length===0?<div style={{textAlign:"center",paddingTop:50,color:T.inkLight}}><div style={{fontSize:40,marginBottom:10}}>📦</div>{(data.stock[cat]||[]).length===0?"No hay productos.":"No se encontraron."}</div>
-    :<div style={{display:"grid",gap:10}}>
-      {items.map(item=>{
-        const critico=item.minimo&&Number(item.cantidad)<=Number(item.minimo);
-        return<div key={item.id} style={{background:T.bgCard,borderRadius:R.card,padding:"14px 18px",border:`1px solid ${critico?T.red+"66":T.border}`,borderLeft:`3px solid ${critico?T.red:ci.color}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,boxShadow:critico?`0 0 12px ${T.redGlow}`:"none"}}>
-          <div style={{flex:1}}>
-            <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}><span style={{fontWeight:700,fontSize:15,color:T.inkBright}}>{item.nombre}</span>{critico&&<Tag color={T.red}>⚠️ Bajo mínimo</Tag>}</div>
-            {item.minimo&&<div style={{color:T.inkLight,fontSize:12}}>Mínimo: {item.minimo} {item.unidad}</div>}
-          </div>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,background:T.bgDeep,borderRadius:R.field,padding:"8px 14px",border:`1px solid ${T.border}`}}>
-              <button onClick={()=>ajustar(item.id,-1)} style={{background:"none",border:"none",color:T.red,cursor:"pointer",fontSize:22,fontWeight:900,padding:0,lineHeight:1}}>−</button>
-              <span style={{fontWeight:900,fontSize:20,color:critico?T.red:ci.color,minWidth:32,textAlign:"center"}}>{item.cantidad}</span>
-              <span style={{color:T.inkLight,fontSize:11}}>{item.unidad}</span>
-              <button onClick={()=>ajustar(item.id,1)} style={{background:"none",border:"none",color:T.green,cursor:"pointer",fontSize:22,fontWeight:900,padding:0,lineHeight:1}}>+</button>
-            </div>
-            <button onClick={()=>editar(item)} style={{background:"none",border:"none",color:T.inkLight,cursor:"pointer",fontSize:16}}>✏️</button>
-            <TrashBtn onClick={()=>trash(item)}/>
-          </div>
-        </div>;
-      })}
-    </div>}
+return<div>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:18}}>
+<div style={{fontSize:20,fontWeight:800,color:T.inkBright}}>📦 Stock</div>
+<Btn onClick={()=>{setSf(!sf);setEid(null);setForm({nombre:””,cantidad:””,unidad:“unidades”,minimo:””});}}>{sf&&!eid?“Cancelar”:”+ Agregar”}</Btn>
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“repeat(2,1fr)”,gap:10,marginBottom:18}}>
+{STOCK_CATS.map(c=>{
+const b=(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).length;
+const sel=cat===c.id;
+return<button key={c.id}
+onTouchEnd={e=>{e.preventDefault();setCat(c.id);setSf(false);setBus(””);}}
+onClick={()=>{setCat(c.id);setSf(false);setBus(””);}}
+style={{background:sel?c.color+“22”:T.bgCard,color:sel?c.color:T.inkMid,border:`1.5px solid ${sel?c.color:T.border}`,borderRadius:R.card,padding:“14px 12px”,fontWeight:700,fontSize:14,cursor:“pointer”,position:“relative”,transition:“all .2s”,boxShadow:sel?`0 0 18px ${c.color}33`:“none”,fontFamily:“inherit”,minHeight:70,WebkitTapHighlightColor:“transparent”}}>
+<div style={{fontSize:20,marginBottom:4}}>{c.label.split(” “)[0]}</div>
+<div style={{fontSize:13}}>{c.label.split(” “).slice(1).join(” “)}</div>
+<div style={{fontSize:10,marginTop:3,opacity:.7}}>{(data.stock[c.id]||[]).length} prod.</div>
+{b>0&&<span style={{position:“absolute”,top:-6,right:-6,background:T.red,color:”#fff”,borderRadius:R.badge,width:20,height:20,fontSize:10,fontWeight:900,display:“flex”,alignItems:“center”,justifyContent:“center”}}>{b}</span>}
+</button>;
+})}
+</div>
+{sf&&<Card style={{borderColor:ci.color+“44”,marginBottom:18}} glow={ci.color+“22”}>
+<div style={{fontWeight:800,color:ci.color,marginBottom:12}}>{eid?“Editar”:`Nuevo — ${ci.label}`}</div>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}}>
+<Field label="Producto *"><Inp value={form.nombre} onChange={v=>setForm(f=>({…f,nombre:v}))} placeholder=“Nombre”/></Field>
+<Field label="Unidad"><Sel value={form.unidad} onChange={v=>setForm(f=>({…f,unidad:v}))} options={[{v:“unidades”,l:“Unidades”},{v:“kg”,l:“Kg”},{v:“litros”,l:“Litros”},{v:“cajas”,l:“Cajas”},{v:“paquetes”,l:“Paquetes”}]}/></Field>
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:14}}>
+<Field label="Cantidad *"><Inp type=“number” value={form.cantidad} onChange={v=>setForm(f=>({…f,cantidad:v}))} placeholder=“Ej: 24”/></Field>
+<Field label="Mínimo alerta"><Inp type=“number” value={form.minimo} onChange={v=>setForm(f=>({…f,minimo:v}))} placeholder=“Ej: 5”/></Field>
+</div>
+<div style={{display:“flex”,gap:8}}>
+<Btn onClick={guardar}>{eid?“Actualizar”:“Guardar”}</Btn>
+{eid&&<Btn variant=“ghost” onClick={()=>{setSf(false);setEid(null);}}>Cancelar</Btn>}
+</div>
+</Card>}
+<Inp value={bus} onChange={setBus} placeholder={`🔍 Buscar en ${ci.label}...`} style={{marginBottom:12}}/>
+{items.length===0?<div style={{textAlign:“center”,paddingTop:50,color:T.inkLight}}><div style={{fontSize:36,marginBottom:10}}>📦</div>{(data.stock[cat]||[]).length===0?“No hay productos.”:“No se encontraron.”}</div>
+:<div style={{display:“grid”,gap:10}}>
+{items.map(item=>{
+const cr=item.minimo&&Number(item.cantidad)<=Number(item.minimo);
+return<div key={item.id} style={{background:T.bgCard,borderRadius:R.card,padding:“14px 16px”,border:`1px solid ${cr?T.red+"66":T.border}`,borderLeft:`3px solid ${cr?T.red:ci.color}`,display:“flex”,justifyContent:“space-between”,alignItems:“center”,gap:10,boxShadow:cr?`0 0 10px ${T.redGlow}`:“none”}}>
+<div style={{flex:1,minWidth:0}}>
+<div style={{display:“flex”,gap:8,alignItems:“center”,marginBottom:4,flexWrap:“wrap”}}><span style={{fontWeight:700,fontSize:14,color:T.inkBright}}>{item.nombre}</span>{cr&&<Tag color={T.red}>⚠️ Bajo</Tag>}</div>
+{item.minimo&&<div style={{color:T.inkLight,fontSize:11}}>Mín: {item.minimo} {item.unidad}</div>}
+</div>
+<div style={{display:“flex”,alignItems:“center”,gap:8,flexShrink:0}}>
+<div style={{display:“flex”,alignItems:“center”,gap:8,background:T.bgDeep,borderRadius:R.field,padding:“8px 12px”,border:`1px solid ${T.border}`}}>
+<button onTouchEnd={e=>{e.preventDefault();aj(item.id,-1);}} onClick={()=>aj(item.id,-1)} style={{background:“none”,border:“none”,color:T.red,cursor:“pointer”,fontSize:24,fontWeight:900,padding:0,lineHeight:1,minHeight:44,minWidth:32,WebkitTapHighlightColor:“transparent”}}>−</button>
+<span style={{fontWeight:900,fontSize:18,color:cr?T.red:ci.color,minWidth:28,textAlign:“center”}}>{item.cantidad}</span>
+<span style={{color:T.inkLight,fontSize:10}}>{item.unidad}</span>
+<button onTouchEnd={e=>{e.preventDefault();aj(item.id,1);}} onClick={()=>aj(item.id,1)} style={{background:“none”,border:“none”,color:T.green,cursor:“pointer”,fontSize:24,fontWeight:900,padding:0,lineHeight:1,minHeight:44,minWidth:32,WebkitTapHighlightColor:“transparent”}}>+</button>
+</div>
+<button onTouchEnd={e=>{e.preventDefault();editar(item);}} onClick={()=>editar(item)} style={{background:“none”,border:“none”,color:T.inkLight,cursor:“pointer”,fontSize:18,minHeight:44,minWidth:36,WebkitTapHighlightColor:“transparent”}}>✏️</button>
+<TrashBtn onClick={()=>trash(item)}/>
+</div>
+</div>;
+})}
+</div>}
+
   </div>;
 }
 
 // ── FALTANTES ─────────────────────────────────────────────────────────────────
 function Faltantes({data,setData,user}) {
-  const [showForm,setShowForm]=useState(false);
-  const [vista,setVista]=useState(false);
-  const [form,setForm]=useState({nombre:"",cantidad:"",unidad:"unidades",urgencia:"media",seccion:"cocina",notas:""});
+const [sf,setSf]=useState(false);
+const [va,setVa]=useState(false);
+const [form,setForm]=useState({nombre:””,cantidad:””,unidad:“unidades”,urgencia:“media”,seccion:“cocina”,notas:””});
 
-  const guardar=()=>{
-    if(!form.nombre.trim())return;
-    setData(d=>({...d,faltantes:[...d.faltantes,{...form,id:Date.now(),pedido:false,cargadoPor:user.name,fechaCarga:new Date().toLocaleDateString("es-AR")}]}));
-    setForm({nombre:"",cantidad:"",unidad:"unidades",urgencia:"media",seccion:"cocina",notas:""});setShowForm(false);
-  };
-  const togglePedido=id=>setData(d=>({...d,faltantes:d.faltantes.map(f=>f.id===id?{...f,pedido:!f.pedido,pedidoPor:!f.pedido?user.name:undefined,fechaPedido:!f.pedido?new Date().toLocaleDateString("es-AR"):undefined}:f)}));
-  const trash=item=>setData(d=>({...d,faltantes:d.faltantes.filter(f=>f.id!==item.id),papelera:[...(d.papelera||[]),{item,tipo:"faltante",eliminadoPor:user.name,fechaEliminacion:Date.now()}]}));
-  const limpiar=()=>setData(d=>({...d,faltantes:d.faltantes.filter(f=>!f.pedido)}));
+const guardar=()=>{
+if(!form.nombre.trim())return;
+setData(d=>({…d,faltantes:[…d.faltantes,{…form,id:Date.now(),pedido:false,cargadoPor:user.name,fechaCarga:new Date().toLocaleDateString(“es-AR”)}]}));
+setForm({nombre:””,cantidad:””,unidad:“unidades”,urgencia:“media”,seccion:“cocina”,notas:””});setSf(false);
+};
+const togPed=id=>setData(d=>({…d,faltantes:d.faltantes.map(f=>f.id===id?{…f,pedido:!f.pedido,pedidoPor:!f.pedido?user.name:undefined,fechaPedido:!f.pedido?new Date().toLocaleDateString(“es-AR”):undefined}:f)}));
+const trash=item=>setData(d=>({…d,faltantes:d.faltantes.filter(f=>f.id!==item.id),papelera:[…(d.papelera||[]),{item,tipo:“faltante”,eliminadoPor:user.name,fechaEliminacion:Date.now()}]}));
+const limpiar=()=>setData(d=>({…d,faltantes:d.faltantes.filter(f=>!f.pedido)}));
 
-  const pendientes=data.faltantes.filter(f=>!f.pedido).sort((a,b)=>({alta:0,media:1,baja:2}[a.urgencia]-{alta:0,media:1,baja:2}[b.urgencia]));
-  const pedidos=data.faltantes.filter(f=>f.pedido);
-  const uc=u=>({alta:T.red,media:T.gold,baja:T.green}[u]||T.inkMid);
+const pend=data.faltantes.filter(f=>!f.pedido).sort((a,b)=>({alta:0,media:1,baja:2}[a.urgencia]-{alta:0,media:1,baja:2}[b.urgencia]));
+const ped=data.faltantes.filter(f=>f.pedido);
+const uc=u=>({alta:T.red,media:T.gold,baja:T.green}[u]||T.inkMid);
 
-  return<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-      <div>
-        <div style={{fontSize:22,fontWeight:800,color:T.inkBright}}>🛒 Faltantes</div>
-        <div style={{color:T.inkLight,fontSize:12,marginTop:2}}>{pendientes.length} pendiente{pendientes.length!==1?"s":""} · {pedidos.length} pedido{pedidos.length!==1?"s":""}</div>
-      </div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {pedidos.length>0&&<Btn small variant="outline" onClick={()=>setVista(v=>!v)}>{vista?"← Volver":"📁 Pedidos"}{!vista&&<span style={{background:T.green,color:T.bgDeep,borderRadius:R.badge,padding:"1px 7px",fontSize:11,fontWeight:900,marginLeft:4}}>{pedidos.length}</span>}</Btn>}
-        {!vista&&<Btn onClick={()=>setShowForm(!showForm)}>{showForm?"Cancelar":"+ Agregar"}</Btn>}
-      </div>
-    </div>
+return<div>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:18}}>
+<div>
+<div style={{fontSize:20,fontWeight:800,color:T.inkBright}}>🛒 Faltantes</div>
+<div style={{color:T.inkLight,fontSize:12,marginTop:2}}>{pend.length} pendiente{pend.length!==1?“s”:””} · {ped.length} pedido{ped.length!==1?“s”:””}</div>
+</div>
+<div style={{display:“flex”,gap:8}}>
+{ped.length>0&&<Btn small variant=“outline” onClick={()=>setVa(v=>!v)}>{va?“← Volver”:“📁”}{!va&&ped.length>0&&<span style={{background:T.green,color:T.bgDeep,borderRadius:R.badge,padding:“1px 6px”,fontSize:10,fontWeight:900,marginLeft:4}}>{ped.length}</span>}</Btn>}
+{!va&&<Btn onClick={()=>setSf(!sf)}>{sf?“Cancelar”:”+ Agregar”}</Btn>}
+</div>
+</div>
+{va?(
+<div>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:14}}>
+<span style={{fontWeight:700,color:T.green,fontSize:15}}>📁 Pedidos realizados</span>
+{ped.length>0&&<Btn small variant="danger" onClick={limpiar}>🗑️ Limpiar</Btn>}
+</div>
+{ped.length===0?<div style={{textAlign:“center”,paddingTop:40,color:T.inkLight}}><div style={{fontSize:36,marginBottom:10}}>📂</div>No hay pedidos.</div>
+:<div style={{display:“grid”,gap:8}}>
+{ped.map(item=>{
+const ug=URGENCIAS.find(u=>u.v===item.urgencia);
+const sc=STOCK_CATS.find(c=>c.id===item.seccion);
+return<div key={item.id} style={{background:T.bgCard,border:`1px solid ${T.green}33`,borderLeft:`3px solid ${T.green}`,borderRadius:R.card,padding:“12px 14px”,display:“flex”,justifyContent:“space-between”,alignItems:“center”,gap:8,flexWrap:“wrap”}}>
+<div style={{flex:1,minWidth:0}}>
+<div style={{display:“flex”,gap:8,alignItems:“center”,marginBottom:4,flexWrap:“wrap”}}>
+<span style={{color:T.green}}>✓</span>
+<span style={{fontWeight:700,fontSize:14,color:T.inkMid,textDecoration:“line-through”}}>{item.nombre}</span>
+{ug&&<Tag color={ug.color}>{ug.l}</Tag>}
+{sc&&<Tag color={sc.color}>{sc.label}</Tag>}
+</div>
+<div style={{color:T.inkLight,fontSize:12}}>{item.pedidoPor&&`Por ${item.pedidoPor}`}{item.fechaPedido&&` · ${item.fechaPedido}`}</div>
+</div>
+<div style={{display:“flex”,gap:8,alignItems:“center”}}>
+<Btn small variant=“ghost” onClick={()=>togPed(item.id)}>↩</Btn>
+<TrashBtn onClick={()=>trash(item)}/>
+</div>
+</div>;
+})}
+</div>}
+</div>
+):(
+<>
+{sf&&<Card style={{borderColor:T.red+“44”,marginBottom:20}} glow={T.redGlow}>
+<div style={{fontWeight:800,color:T.red,marginBottom:14}}>Nuevo faltante</div>
+<Field label="¿Qué falta? *" style={{marginBottom:12}}><Inp value={form.nombre} onChange={v=>setForm(f=>({…f,nombre:v}))} placeholder=“Nombre del producto”/></Field>
+<Field label="Urgencia" style={{marginBottom:12}}>
+<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>{URGENCIAS.map(u=><Chip key={u.v} label={u.l} selected={form.urgencia===u.v} color={u.color} onClick={()=>setForm(f=>({…f,urgencia:u.v}))}/>)}</div>
+</Field>
+<Field label="Sección" style={{marginBottom:12}}>
+<div style={{display:“flex”,gap:8,flexWrap:“wrap”}}>{STOCK_CATS.map(c=><Chip key={c.id} label={c.label} selected={form.seccion===c.id} color={c.color} onClick={()=>setForm(f=>({…f,seccion:c.id}))}/>)}</div>
+</Field>
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:12,marginBottom:12}}>
+<Field label="Cantidad"><Inp type=“number” value={form.cantidad} onChange={v=>setForm(f=>({…f,cantidad:v}))} placeholder=“Opcional”/></Field>
+<Field label="Unidad"><Sel value={form.unidad} onChange={v=>setForm(f=>({…f,unidad:v}))} options={[{v:“unidades”,l:“Unidades”},{v:“kg”,l:“Kg”},{v:“litros”,l:“Litros”},{v:“cajas”,l:“Cajas”}]}/></Field>
+</div>
+<Field label="Notas" style={{marginBottom:14}}><Inp value={form.notas} onChange={v=>setForm(f=>({…f,notas:v}))} placeholder=“Proveedor, referencia…”/></Field>
+<Btn full onClick={guardar}>Guardar</Btn>
+</Card>}
+{pend.length===0?<div style={{textAlign:“center”,paddingTop:60,color:T.inkLight}}><div style={{fontSize:44,marginBottom:12}}>✅</div><div style={{fontSize:18,fontWeight:700,color:T.inkMid}}>¡Sin faltantes!</div></div>
+:([“alta”,“media”,“baja”].map(urg=>{
+const gr=pend.filter(f=>f.urgencia===urg);
+if(!gr.length)return null;
+const ui=URGENCIAS.find(u=>u.v===urg);
+return<div key={urg} style={{marginBottom:18}}>
+<div style={{display:“flex”,alignItems:“center”,gap:8,marginBottom:8}}>
+<div style={{width:3,height:16,background:ui.color,borderRadius:1}}/>
+<span style={{fontWeight:700,fontSize:12,color:ui.color,textTransform:“uppercase”,letterSpacing:1.5}}>{ui.l}</span>
+<span style={{background:ui.color+“22”,color:ui.color,borderRadius:R.badge,padding:“1px 8px”,fontSize:11,fontWeight:700}}>{gr.length}</span>
+</div>
+{gr.map(item=>{
+const sc=STOCK_CATS.find(c=>c.id===item.seccion);
+const uid=`chk_${item.id}`;
+return<div key={item.id} style={{display:“flex”,alignItems:“center”,gap:8,marginBottom:2}}>
+<input type=“checkbox” id={uid} className=“checklist-cb” checked={item.pedido||false} onChange={()=>togPed(item.id)}/>
+<label htmlFor={uid} className=“checklist-label” style={{flex:1,border:`1px solid ${uc(item.urgencia)}33`,borderLeft:`3px solid ${uc(item.urgencia)}`}}>
+<div className="checklist-box">
+<svg className="check-icon" width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1 5L4.5 8.5L12 1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+</div>
+<div style={{flex:1,minWidth:0}}>
+<div style={{display:“flex”,gap:8,alignItems:“center”,flexWrap:“wrap”,marginBottom:2}}>
+<span className="checklist-text" style={{fontWeight:700,fontSize:14,color:T.inkBright}}>{item.nombre}</span>
+{sc&&<Tag color={sc.color}>{sc.label}</Tag>}
+</div>
+<div style={{color:T.inkLight,fontSize:11}}>{item.cantidad&&`${item.cantidad} ${item.unidad}`}{item.notas&&` · ${item.notas}`}</div>
+</div>
+</label>
+<TrashBtn onClick={()=>trash(item)}/>
+</div>;
+})}
+</div>;
+}))}
+</>
+)}
 
-    {vista?(
-      <div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:20}}>📁</span><span style={{fontWeight:700,color:T.green,fontSize:16}}>Pedidos realizados</span></div>
-          {pedidos.length>0&&<Btn small variant="danger" onClick={limpiar}>🗑️ Limpiar</Btn>}
-        </div>
-        {pedidos.length===0?<div style={{textAlign:"center",paddingTop:40,color:T.inkLight}}><div style={{fontSize:40,marginBottom:10}}>📂</div>No hay pedidos archivados.</div>
-        :<div style={{display:"grid",gap:8}}>
-          {pedidos.map(item=>{
-            const urg=URGENCIAS.find(u=>u.v===item.urgencia);
-            const sec=STOCK_CATS.find(c=>c.id===item.seccion);
-            return<div key={item.id} style={{background:T.bgCard,border:`1px solid ${T.green}33`,borderLeft:`3px solid ${T.green}`,borderRadius:R.card,padding:"14px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-              <div style={{flex:1}}>
-                <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}>
-                  <span style={{color:T.green,fontSize:16}}>✓</span>
-                  <span style={{fontWeight:700,fontSize:15,color:T.inkMid,textDecoration:"line-through"}}>{item.nombre}</span>
-                  {urg&&<Tag color={urg.color}>{urg.l}</Tag>}
-                  {sec&&<Tag color={sec.color}>{sec.label}</Tag>}
-                </div>
-                <div style={{color:T.inkLight,fontSize:12}}>{item.cantidad&&`${item.cantidad} ${item.unidad}`}{item.pedidoPor&&` · Por ${item.pedidoPor}`}{item.fechaPedido&&` el ${item.fechaPedido}`}</div>
-              </div>
-              <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                <Btn small variant="ghost" onClick={()=>togglePedido(item.id)}>↩ Reabrir</Btn>
-                <TrashBtn onClick={()=>trash(item)}/>
-              </div>
-            </div>;
-          })}
-        </div>}
-      </div>
-    ):(
-      <>
-        {showForm&&<Card style={{borderColor:T.red+"44",marginBottom:24}} glow={T.redGlow}>
-          <div style={{fontWeight:800,color:T.red,marginBottom:16}}>Nuevo faltante</div>
-          <Field label="¿Qué falta? *" style={{marginBottom:14}}><Inp value={form.nombre} onChange={v=>setForm(f=>({...f,nombre:v}))} placeholder="Nombre del producto"/></Field>
-          <Field label="Urgencia" style={{marginBottom:14}}>
-            <div style={{display:"flex",gap:8}}>{URGENCIAS.map(u=><Chip key={u.v} label={u.l} selected={form.urgencia===u.v} color={u.color} onClick={()=>setForm(f=>({...f,urgencia:u.v}))}/>)}</div>
-          </Field>
-          <Field label="Sección" style={{marginBottom:14}}>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{STOCK_CATS.map(c=><Chip key={c.id} label={c.label} selected={form.seccion===c.id} color={c.color} onClick={()=>setForm(f=>({...f,seccion:c.id}))}/>)}</div>
-          </Field>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
-            <Field label="Cantidad"><Inp type="number" value={form.cantidad} onChange={v=>setForm(f=>({...f,cantidad:v}))} placeholder="Opcional"/></Field>
-            <Field label="Unidad"><Sel value={form.unidad} onChange={v=>setForm(f=>({...f,unidad:v}))} options={[{v:"unidades",l:"Unidades"},{v:"kg",l:"Kg"},{v:"litros",l:"Litros"},{v:"cajas",l:"Cajas"}]}/></Field>
-          </div>
-          <Field label="Notas" style={{marginBottom:16}}><Inp value={form.notas} onChange={v=>setForm(f=>({...f,notas:v}))} placeholder="Proveedor, referencia..."/></Field>
-          <Btn onClick={guardar}>Guardar</Btn>
-        </Card>}
-        {pendientes.length===0?<div style={{textAlign:"center",paddingTop:60,color:T.inkLight}}><div style={{fontSize:48,marginBottom:12}}>✅</div><div style={{fontSize:20,fontWeight:700,color:T.inkMid}}>¡Sin faltantes!</div></div>
-        :(["alta","media","baja"].map(urg=>{
-          const grupo=pendientes.filter(f=>f.urgencia===urg);
-          if(!grupo.length)return null;
-          const ui=URGENCIAS.find(u=>u.v===urg);
-          return<div key={urg} style={{marginBottom:20}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-              <div style={{width:3,height:18,background:ui.color,borderRadius:1}}/>
-              <span style={{fontWeight:700,fontSize:13,color:ui.color,textTransform:"uppercase",letterSpacing:1.5}}>{ui.l}</span>
-              <span style={{background:ui.color+"22",color:ui.color,borderRadius:R.badge,padding:"1px 8px",fontSize:11,fontWeight:700}}>{grupo.length}</span>
-            </div>
-            {grupo.map(item=>{
-              const sec=STOCK_CATS.find(c=>c.id===item.seccion);
-              const uid=`chk_${item.id}`;
-              return<div key={item.id} className="checklist-item" style={{display:"flex",alignItems:"center",gap:8}}>
-                <input type="checkbox" id={uid} className="checklist-cb" checked={item.pedido||false} onChange={()=>togglePedido(item.id)}/>
-                <label htmlFor={uid} className="checklist-label" style={{flex:1,border:`1px solid ${uc(item.urgencia)}33`,borderLeft:`3px solid ${uc(item.urgencia)}`}}>
-                  <div className="checklist-box">
-                    <svg className="check-icon" width="13" height="10" viewBox="0 0 13 10" fill="none">
-                      <path d="M1 5L4.5 8.5L12 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginBottom:3}}>
-                      <span className="checklist-text" style={{fontWeight:700,fontSize:15,color:T.inkBright}}>{item.nombre}</span>
-                      {sec&&<Tag color={sec.color}>{sec.label}</Tag>}
-                    </div>
-                    <div style={{color:T.inkLight,fontSize:12}}>{item.cantidad&&`${item.cantidad} ${item.unidad}`}{item.notas&&` · ${item.notas}`}{item.cargadoPor&&` · Por ${item.cargadoPor}`}</div>
-                  </div>
-                </label>
-                <TrashBtn onClick={()=>trash(item)}/>
-              </div>;
-            })}
-          </div>;
-        }))}
-      </>
-    )}
   </div>;
 }
 
 // ── APP ROOT ──────────────────────────────────────────────────────────────────
 function App() {
-  const [user,setUser]=useState(null);
-  const [tab,setTab]=useState("dashboard");
-  const [data,setData]=useState(loadData);
-  const [showPap,setShowPap]=useState(false);
+const [user,setUser]=useState(null);
+const [tab,setTab]=useState(“dashboard”);
+const [data,setData]=useState(loadData);
+const [showPap,setShowPap]=useState(false);
 
-  useEffect(()=>{const s=loadSession();if(s){const u=USERS.find(u=>u.id===s);if(u)setUser(u);}}, []);
-  useEffect(()=>{
-    setData(d=>{
-      const ahora=Date.now();
-      const pap=(d.papelera||[]).filter(p=>(ahora-p.fechaEliminacion)<DIAS_PAPELERA*86400000);
-      if(pap.length===(d.papelera||[]).length)return d;
-      return{...d,papelera:pap};
-    });
-  }, []);
-  useEffect(()=>{saveData(data);}, [data]);
+useEffect(()=>{const s=loadSession();if(s){const u=USERS.find(u=>u.id===s);if(u)setUser(u);}}, []);
+useEffect(()=>{
+setData(d=>{
+const now=Date.now();
+const p=(d.papelera||[]).filter(x=>(now-x.fechaEliminacion)<DIAS_PAPELERA*86400000);
+if(p.length===(d.papelera||[]).length)return d;
+return{…d,papelera:p};
+});
+},[]);
+useEffect(()=>{saveData(data);},[data]);
 
-  const login=u=>{setUser(u);saveSession(u.id);setTab("dashboard");};
-  const logout=()=>{setUser(null);clearSession();};
+const login=u=>{setUser(u);saveSession(u.id);setTab(“dashboard”);};
+const logout=()=>{setUser(null);clearSession();};
 
-  const restore=idx=>{
-    const p=data.papelera[idx];
-    setData(d=>{
-      const pap=d.papelera.filter((_,i)=>i!==idx);
-      if(p.tipo==="evento")return{...d,papelera:pap,eventos:[...d.eventos,p.item]};
-      if(p.tipo==="stock"){const cat=p.item._cat||"cocina";return{...d,papelera:pap,stock:{...d.stock,[cat]:[...(d.stock[cat]||[]),p.item]}};}
-      if(p.tipo==="faltante")return{...d,papelera:pap,faltantes:[...d.faltantes,p.item]};
-      return{...d,papelera:pap};
-    });
-  };
-  const delPap=idx=>setData(d=>({...d,papelera:d.papelera.filter((_,i)=>i!==idx)}));
+const restore=idx=>{
+const p=data.papelera[idx];
+setData(d=>{
+const pap=d.papelera.filter((_,i)=>i!==idx);
+if(p.tipo===“evento”)return{…d,papelera:pap,eventos:[…d.eventos,p.item]};
+if(p.tipo===“stock”){const cat=p.item.*cat||“cocina”;return{…d,papelera:pap,stock:{…d.stock,[cat]:[…(d.stock[cat]||[]),p.item]}};}
+if(p.tipo===“faltante”)return{…d,papelera:pap,faltantes:[…d.faltantes,p.item]};
+return{…d,papelera:pap};
+});
+};
+const delPap=idx=>setData(d=>({…d,papelera:d.papelera.filter((*,i)=>i!==idx)}));
 
-  const faltUrg=data.faltantes.filter(f=>!f.pedido&&f.urgencia==="alta").length;
-  const stockAlrt=STOCK_CATS.reduce((acc,c)=>acc+(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).length,0);
-  const papCount=(data.papelera||[]).length;
+const fu=data.faltantes.filter(f=>!f.pedido&&f.urgencia===“alta”).length;
+const sa=STOCK_CATS.reduce((a,c)=>a+(data.stock[c.id]||[]).filter(s=>s.minimo&&Number(s.cantidad)<=Number(s.minimo)).length,0);
+const pc=(data.papelera||[]).length;
 
-  const TABS=[
-    {id:"dashboard",icon:"🏠",label:"Inicio"},
-    {id:"eventos",  icon:"🎉",label:"Eventos"},
-    {id:"stock",    icon:"📦",label:"Stock",    badge:stockAlrt},
-    {id:"faltantes",icon:"🛒",label:"Faltantes",badge:faltUrg},
-  ];
+const TABS=[
+{id:“dashboard”,icon:“🏠”,label:“Inicio”},
+{id:“eventos”,  icon:“🎉”,label:“Eventos”},
+{id:“stock”,    icon:“📦”,label:“Stock”,  badge:sa},
+{id:“faltantes”,icon:“🛒”,label:“Faltan”, badge:fu},
+];
 
-  if(!user)return<Login onLogin={login}/>;
+if(!user)return<Login onLogin={login}/>;
 
-  return(
-    <div style={{minHeight:"100vh",background:T.bg,fontFamily:"'Lora',Georgia,serif",color:T.ink}}>
-      {showPap&&<PapeleraModal papelera={data.papelera||[]} onRestore={restore} onDelete={delPap} onClose={()=>setShowPap(false)}/>}
-      <div style={{background:T.bgCard,borderBottom:`1px solid ${T.border}`,padding:"0 20px",position:"sticky",top:0,zIndex:100,boxShadow:"0 4px 20px #00000060"}}>
-        <div style={{maxWidth:880,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{fontWeight:900,fontSize:20,color:T.blue,padding:"13px 0",letterSpacing:2,textShadow:`0 0 20px ${T.blueGlow}`}}>✦ SalónPro</div>
-          <nav style={{display:"flex",gap:2}}>
-            {TABS.map(t=>(
-              <button key={t.id} onClick={()=>setTab(t.id)} style={{background:tab===t.id?T.blue+"18":"transparent",color:tab===t.id?T.blue:T.inkMid,border:"none",borderRadius:R.btn,padding:"10px 14px",fontWeight:tab===t.id?700:500,fontSize:14,cursor:"pointer",fontFamily:"inherit",position:"relative",transition:"all .18s",boxShadow:tab===t.id?`0 0 12px ${T.blueGlow}`:"none"}}>
-                {t.icon} {t.label}
-                {t.badge>0&&<span style={{position:"absolute",top:5,right:4,background:T.red,color:"#fff",borderRadius:R.badge,width:17,height:17,fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{t.badge}</span>}
-              </button>
-            ))}
-          </nav>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <button onClick={()=>setShowPap(true)} title="Papelera" style={{position:"relative",background:"none",border:`1.5px solid ${T.border}`,borderRadius:R.btn,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"all .2s"}}
-              onMouseEnter={e=>{e.currentTarget.style.borderColor=T.red;e.currentTarget.style.background=T.red+"18";e.currentTarget.querySelector("svg").style.fill=T.red;}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.background="none";e.currentTarget.querySelector("svg").style.fill=T.inkLight;}}>
-              <svg viewBox="0 0 448 512" style={{width:15,height:15,fill:T.inkLight,transition:"fill .2s"}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
-              {papCount>0&&<span style={{position:"absolute",top:-5,right:-5,background:T.inkLight,color:T.bgDeep,borderRadius:R.badge,width:17,height:17,fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{papCount}</span>}
-            </button>
-            <div style={{background:user.bg,border:`1.5px solid ${user.color}44`,borderRadius:R.btn,padding:"6px 14px 6px 10px",display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:18}}>{user.avatar}</span>
-              <span style={{fontWeight:700,fontSize:13,color:user.color}}>{user.name}</span>
-            </div>
-            <button onClick={logout} style={{background:"none",border:`1.5px solid ${T.border}`,borderRadius:R.btn,padding:"6px 12px",color:T.inkLight,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>Salir</button>
-          </div>
-        </div>
+return<div style={{minHeight:“100vh”,background:T.bg,fontFamily:”‘Lora’,Georgia,serif”,color:T.ink}}>
+{showPap&&<PapeleraModal papelera={data.papelera||[]} onRestore={restore} onDelete={delPap} onClose={()=>setShowPap(false)}/>}
+
+```
+{/* NAVBAR TOP — solo en tablet/desktop (>600px) */}
+<div className="navbar-top" style={{background:T.bgCard,borderBottom:`1px solid ${T.border}`,padding:"0 20px",position:"sticky",top:0,zIndex:100,boxShadow:"0 4px 20px #00000060"}}>
+  <div style={{maxWidth:880,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+    <div style={{fontWeight:900,fontSize:20,color:T.blue,padding:"13px 0",letterSpacing:2,textShadow:`0 0 20px ${T.blueGlow}`}}>✦ SalónPro</div>
+    <nav style={{display:"flex",gap:2}}>
+      {TABS.map(t=><button key={t.id}
+        onTouchEnd={e=>{e.preventDefault();setTab(t.id);}}
+        onClick={()=>setTab(t.id)}
+        style={{background:tab===t.id?T.blue+"18":"transparent",color:tab===t.id?T.blue:T.inkMid,border:"none",borderRadius:R.btn,padding:"10px 14px",fontWeight:tab===t.id?700:500,fontSize:14,cursor:"pointer",fontFamily:"inherit",position:"relative",transition:"all .15s",boxShadow:tab===t.id?`0 0 12px ${T.blueGlow}`:"none",WebkitTapHighlightColor:"transparent",minHeight:44}}>
+        {t.icon} {t.label}
+        {t.badge>0&&<span style={{position:"absolute",top:5,right:4,background:T.red,color:"#fff",borderRadius:R.badge,width:17,height:17,fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{t.badge}</span>}
+      </button>)}
+    </nav>
+    <div style={{display:"flex",alignItems:"center",gap:8}}>
+      <button
+        onTouchEnd={e=>{e.preventDefault();setShowPap(true);}}
+        onClick={()=>setShowPap(true)}
+        style={{position:"relative",background:"none",border:`1.5px solid ${T.border}`,borderRadius:R.btn,width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",WebkitTapHighlightColor:"transparent"}}>
+        <svg viewBox="0 0 448 512" style={{width:16,height:16,fill:T.inkLight}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
+        {pc>0&&<span style={{position:"absolute",top:-5,right:-5,background:T.inkLight,color:T.bgDeep,borderRadius:R.badge,width:17,height:17,fontSize:10,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center"}}>{pc}</span>}
+      </button>
+      <div style={{background:user.bg,border:`1.5px solid ${user.color}44`,borderRadius:R.btn,padding:"6px 12px 6px 8px",display:"flex",alignItems:"center",gap:8}}>
+        <span style={{fontSize:18}}>{user.avatar}</span>
+        <span style={{fontWeight:700,fontSize:13,color:user.color}}>{user.name}</span>
       </div>
-      <div style={{maxWidth:880,margin:"0 auto",padding:"28px 20px 60px"}}>
-        {tab==="dashboard"&&<Dashboard data={data} user={user}/>}
-        {tab==="eventos"  &&<Eventos   data={data} setData={setData} user={user}/>}
-        {tab==="stock"    &&<Stock     data={data} setData={setData} user={user}/>}
-        {tab==="faltantes"&&<Faltantes data={data} setData={setData} user={user}/>}
-      </div>
+      <button onTouchEnd={e=>{e.preventDefault();logout();}} onClick={logout} style={{background:"none",border:`1.5px solid ${T.border}`,borderRadius:R.btn,padding:"6px 12px",color:T.inkLight,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600,minHeight:44,WebkitTapHighlightColor:"transparent"}}>Salir</button>
     </div>
-  );
+  </div>
+</div>
+
+{/* NAVBAR BOTTOM — solo en móvil (<600px) */}
+<div className="navbar-bottom">
+  {TABS.map(t=><button key={t.id}
+    className={`nav-bottom-btn${tab===t.id?" active":""}`}
+    onTouchEnd={e=>{e.preventDefault();setTab(t.id);}}
+    onClick={()=>setTab(t.id)}>
+    <span className="nav-icon">{t.icon}</span>
+    <span>{t.label}</span>
+    {t.badge>0&&<span className="nav-badge">{t.badge}</span>}
+  </button>)}
+  {/* Papelera en navbar bottom */}
+  <button
+    className="nav-bottom-btn"
+    onTouchEnd={e=>{e.preventDefault();setShowPap(true);}}
+    onClick={()=>setShowPap(true)}
+    style={{position:"relative"}}>
+    <span className="nav-icon">
+      <svg viewBox="0 0 448 512" style={{width:20,height:20,fill:tab==="papelera"?T.blue:T.inkLight,verticalAlign:"middle"}}><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
+    </span>
+    <span>Papelera</span>
+    {pc>0&&<span className="nav-badge">{pc}</span>}
+  </button>
+</div>
+
+{/* Header móvil — usuario + salir */}
+<div style={{display:"none"}} className="mobile-header">
+</div>
+
+{/* CONTENIDO */}
+<div className="page-content" style={{maxWidth:880,margin:"0 auto",padding:"20px 16px 100px"}}>
+  {/* Usuario pill en móvil */}
+  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,padding:"0 2px"}}>
+    <div style={{display:"flex",alignItems:"center",gap:8,background:user.bg,border:`1.5px solid ${user.color}44`,borderRadius:R.btn,padding:"6px 12px 6px 8px"}}>
+      <span style={{fontSize:18}}>{user.avatar}</span>
+      <span style={{fontWeight:700,fontSize:13,color:user.color}}>{user.name}</span>
+    </div>
+    <button onTouchEnd={e=>{e.preventDefault();logout();}} onClick={logout} style={{background:"none",border:`1.5px solid ${T.border}`,borderRadius:R.btn,padding:"6px 12px",color:T.inkLight,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600,minHeight:44,WebkitTapHighlightColor:"transparent"}}>Salir</button>
+  </div>
+
+  {tab==="dashboard"&&<Dashboard data={data} user={user}/>}
+  {tab==="eventos"  &&<Eventos   data={data} setData={setData} user={user}/>}
+  {tab==="stock"    &&<Stock     data={data} setData={setData} user={user}/>}
+  {tab==="faltantes"&&<Faltantes data={data} setData={setData} user={user}/>}
+</div>
+```
+
+  </div>;
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-  </script>
+ReactDOM.createRoot(document.getElementById(“root”)).render(<App/>);
+</script>
+
 </body>
 </html>
